@@ -1,12 +1,11 @@
 # CVC-Viewer
 v1.0
 Moieen Abbas
-
+# Description
 The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices like smart cards etc.
+# ScreenShots
 
-
-# Acknowledgments:
-
+# Acknowledgments
 This Project includes the Bouncy Castle cryptographic libraries
 available from http://www.bouncycastle.org/
 
