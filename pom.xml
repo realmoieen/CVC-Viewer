@@ -67,7 +67,7 @@
                     <!-- MainClass in mainfest make a executable jar -->
                     <archive>
                         <manifest>
-                            <mainClass>com.moieen.cvc.gui.cvcviewer.ParseCVCertificate</mainClass>
+                            <mainClass>com.moieen.cvc.gui.cvcviewer.Lunch</mainClass>
                         </manifest>
                     </archive>
 
@@ -103,7 +103,7 @@
                             <dontWrapJar>false</dontWrapJar>
                             <errTitle>Error in launch4j plugin</errTitle>
                             <classPath>
-                                <mainClass>com.moieen.cvc.gui.cvcviewer.ParseCVCertificate</mainClass>
+                                <mainClass>com.moieen.cvc.gui.cvcviewer.Lunch</mainClass>
                             </classPath>
                             <icon>src/main/resources/certificate16x16.ico</icon>
                             <jre>
