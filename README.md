@@ -1,6 +1,7 @@
 # CVC-Viewer
-# v1.0
-# Moieen Abbas
+v1.0
+Moieen Abbas
+
 The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices like smart cards etc.
 
 
