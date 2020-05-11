@@ -2,7 +2,7 @@
 v1.0
 Moieen Abbas
 # Description
-The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices like smart cards etc.
+The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices like smart cards etc. According Card Verifiable Certificates (CVC BSI TR-03110) used by EU EAC ePassports and eIDs.
 # ScreenShots
 General Tab
 
