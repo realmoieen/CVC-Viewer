@@ -15,7 +15,16 @@
         <dependency>
             <groupId>com.secunet</groupId>
             <artifactId>testbedutils-CVC</artifactId>
-            <version>1.2</version>
+            <version>1.3</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/testbedutils-CVC-1.3.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.78.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/bcprov-jdk18on-1.78.1.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.jdesktop</groupId>

@@ -1,21 +1,5 @@
 package com.moieen.cvc.gui.cvcviewer;
 
-import com.secunet.testbedutils.cvc.cvcertificate.CVAuthorization;
-import com.secunet.testbedutils.cvc.cvcertificate.CVAuthorizationAT;
-import com.secunet.testbedutils.cvc.cvcertificate.CVAuthorizationIS;
-import com.secunet.testbedutils.cvc.cvcertificate.CVAuthorizationST;
-import com.secunet.testbedutils.cvc.cvcertificate.CVCertificate;
-import com.secunet.testbedutils.cvc.cvcertificate.CVExtension;
-import com.secunet.testbedutils.cvc.cvcertificate.CVExtensionData;
-import com.secunet.testbedutils.cvc.cvcertificate.CVExtensionType;
-import com.secunet.testbedutils.cvc.cvcertificate.CVHolderAuth;
-import com.secunet.testbedutils.cvc.cvcertificate.DataBuffer;
-import com.secunet.testbedutils.cvc.cvcertificate.ECCCurves;
-import com.secunet.testbedutils.cvc.cvcertificate.ECPubPoint;
-import com.secunet.testbedutils.cvc.cvcertificate.TermType;
-import com.secunet.testbedutils.cvc.cvcertificate.exception.CVInvalidKeySourceException;
-import com.secunet.testbedutils.cvc.cvcertificate.exception.CVKeyTypeNotSupportedException;
-import com.secunet.testbedutils.cvc.cvcertificate.exception.CVMissingKeyException;
 import java.awt.Image;
 import java.security.spec.RSAPublicKeySpec;
 import java.text.DateFormat;
@@ -25,6 +9,11 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
+
+import de.bsi.testbedutils.cvc.cvcertificate.*;
+import de.bsi.testbedutils.cvc.cvcertificate.exception.CVInvalidKeySourceException;
+import de.bsi.testbedutils.cvc.cvcertificate.exception.CVKeyTypeNotSupportedException;
+import de.bsi.testbedutils.cvc.cvcertificate.exception.CVMissingKeyException;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 
@@ -655,7 +644,7 @@ public class CVCViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_okActionPerformed
 
     /**
-     * @param args the command line arguments
+     * @param objCertificate the command line arguments
      */
     public static void display(CVCertificate objCertificate) {
         /* Set the Nimbus look and feel */

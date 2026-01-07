@@ -1,15 +1,14 @@
 package com.moieen.cvc.gui.cvcviewer;
 
-import com.secunet.testbedutils.cvc.cvcertificate.CVCertificate;
-import com.secunet.testbedutils.cvc.cvcertificate.DataBuffer;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.io.IOException;
 import java.security.Security;
 import java.util.Arrays;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -26,7 +25,7 @@ public class Lunch {
     public static void main(String[] args) {
         Security.addProvider(new BouncyCastleProvider());
         if (args.length < 1) {
-            JFileChooser fileChooser = new JFileChooser("/");
+            JFileChooser fileChooser = new JFileChooser(System.getProperty("user.home"));
             fileChooser.setDialogTitle("Choose file");
             fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("CVC File", "cvcert", "cvreq"));
             fileChooser.setApproveButtonText("Open");
@@ -59,40 +58,18 @@ public class Lunch {
      * @return CV certificate.
      */
     private static CVCertificate loadCVCertificate(File certificateFile) throws Exception {
-        CVCertificate result = null;
-
-        if (certificateFile == null) {
-            return null;
-        }
-
+        Objects.requireNonNull(certificateFile, "Certificate file is null");
         if (!certificateFile.exists()) {
             throw new Exception("File does not exist: " + certificateFile.getAbsolutePath());
-//            return null;
         }
-
-        DataBuffer rawCert = null;
-        try {
-            rawCert = DataBuffer.readFromFile(certificateFile.getAbsolutePath());
-            result = new CVCertificate(rawCert);
-            System.out.println("Loaded " + result.getCertHolderRef() + " from " + certificateFile.getAbsolutePath());
-        } catch (IOException e) {
-            throw new Exception("Unable to read CV certificate from file:" + e.getMessage());
-        } catch (Exception e) {
-            rawCert = DataBuffer.decodeB64(new String(rawCert.toByteArray()));
-            try {
-                result = new CVCertificate(rawCert);
-            } catch (Exception ex) {
-                throw new Exception("Unable to read CV certificate from file:" + e.getMessage());
-
-            }
-        }
-
-        return result;
+        List<CVCertificate> cvCertificates = CertificateParser.loadCertificates(certificateFile);
+        return cvCertificates.get(0);
     }
 
     public static void showError(Exception exceptionError) {
         String errorMessage = "Message: " + exceptionError.getMessage()
                 + "\nStackTrace: " + Arrays.toString(exceptionError.getStackTrace()).replace(",", "\n");
+        exceptionError.printStackTrace();
         String title = exceptionError.getClass().getName();
         showError(errorMessage, title);
     }
