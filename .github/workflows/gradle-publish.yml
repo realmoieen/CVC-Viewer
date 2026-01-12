@@ -42,7 +42,7 @@ jobs:
             **/gradle-wrapper.properties
 
       - name: Gradle Build started
-        run: ./gradlew clean build --no-daemon
+        run: ./gradlew clean windowsZip --no-daemon
 
       - name: Store reports
         if: failure()
