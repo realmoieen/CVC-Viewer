@@ -52,7 +52,7 @@ jar {
     }
 }
 shadowJar {
-
+    archiveFileName = "${project.name}-${project.version}.jar"
 }
 launch4j {
     mainClassName = 'com.moieen.cvc.gui.cvcviewer.Lunch'
@@ -67,19 +67,52 @@ launch4j {
     companyName = "Moieen Abbas (realmoieen@gmail.com)(+923012605119)"
     jreMinVersion = '1.8.0_131'
     supportUrl = "https://github.com/realmoieen/CVC-Viewer/issues"
+    productName="${project.name}-${project.version}.exe"
 }
-
+createExe{
+    dependsOn test
+}
 // Encoding configuration
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
+def windowsZipDir = layout.buildDirectory.dir("windowsZip")
+
+tasks.register('prepareWindowsZip') {
+    group = 'distribution'
+    dependsOn 'createExe'   // your launch4j task
+
+    doLast {
+        copy {
+            from(projectDir) {
+                include "CVC_Registry.reg"
+                filter { line ->
+                    line.replaceAll("%VERSION%", project.version.toString())
+                }
+            }
+
+            // Include EXE
+            from(layout.buildDirectory.dir('launch4j')) {
+                include "*.exe"
+            }
+
+            // Optional: include README / license
+            from(projectDir) {
+                include 'README.md'
+                include 'LICENSE'
+            }
+
+            into windowsZipDir.get().asFile
+        }
+    }
+}
 
 tasks.register('windowsZip', Zip) {
     group = 'distribution'
-    description = 'Packages Launch4j EXE into a Windows ZIP'
+    description = 'Packages Launch4j EXE and files into a Windows ZIP'
 
     // Ensure EXE is created first
-    dependsOn createExe
+    dependsOn prepareWindowsZip
 
     // ZIP name: *-windows.zip
     archiveBaseName = "${project.name}"
@@ -88,15 +121,5 @@ tasks.register('windowsZip', Zip) {
 
     destinationDirectory = layout.buildDirectory.dir('distributions')
 
-    // Include EXE
-    from(layout.buildDirectory.dir('launch4j')) {
-        include "*.exe"
-    }
-
-    // Optional: include README / license
-    from(projectDir) {
-        include 'CVC_Registry.reg'
-        include 'README.md'
-        include 'LICENSE'
-    }
+    from windowsZipDir
 }

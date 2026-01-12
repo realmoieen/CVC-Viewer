@@ -44,10 +44,9 @@ class CertificateParserTest {
 
 
         for (CVCertificate cert : certs) {
-            Assertions.assertNotNull(cert);
-            Assertions.assertNotNull(
-                    cert,
-                    () -> "Failed parsing: " + certificateFile.getName()
+            Assertions.assertAll(
+                    () -> Assertions.assertNotNull(cert),
+                    () -> Assertions.assertNotNull(cert, () -> "Failed parsing: " + certificateFile.getName())
             );
         }
     }

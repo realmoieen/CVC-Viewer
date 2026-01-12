@@ -1,6 +1,5 @@
 # CVC-Viewer
 
-v1.0
 **Author:** Moieen Abbas
 
 ---
@@ -34,6 +33,107 @@ This tool provides a **human-readable view** of CV Certificates without assuming
     * Validity dates
     * Authorization roles and permissions
 * Supports **single certificates** and **certificate chains**
+
+---
+## How to Use CVC-Viewer
+
+### Windows Environment
+
+The **GitHub Releases** page provides a ready-to-use **Windows ZIP distribution**.
+
+#### Steps:
+
+1. Download the **Windows ZIP** from GitHub Releases
+2. Extract the ZIP archive
+3. Run the EXE file:
+
+   ```
+   CVCViewer.exe
+   ```
+4. A **file chooser dialog** will appear
+5. Select:
+
+    * CV Certificate
+    * CV Request
+    * Related EAC/CVC files
+
+The certificate details will be displayed in the viewer.
+
+#### Java Requirement (Windows)
+
+* Java **must be installed**
+* OR `JAVA_HOME` must be correctly set in system environment variables
+* **Minimum required JRE:**
+
+  ```
+  Java 1.8.0_131
+  ```
+
+---
+
+### Linux & macOS Environment
+
+For Linux and macOS, use the **executable JAR** provided in GitHub Releases. 
+
+⚠️ This application required Graphical Environment to run, headless is not supported.
+
+#### Option 1: Launch with File Chooser
+
+```bash
+java -jar <location>/CVC-Viewer-2.0.jar
+```
+
+This will open the application and prompt you to select a certificate file.
+
+#### Option 2: Open Certificate Directly
+
+```bash
+java -jar <location>/CVC-Viewer-2.0.jar <certificate_path>
+```
+
+This will launch the viewer and **directly load the specified CV certificate**.
+
+#### Java Requirement (Linux & macOS)
+
+* Java Runtime Environment installed
+* **Minimum required JRE:**
+
+  ```
+  Java 1.8.0_131
+  ```
+
+---
+
+## Windows Integration (Context Menu Support)
+
+The **Windows ZIP distribution** contains an additional registry file:
+
+```
+CVC_Registry.reg
+```
+
+This registry file **adds CVC-Viewer to the Windows right-click context menu**, allowing you to open CV certificates directly by right-clicking on a file.
+
+### Important Notes ⚠️
+
+* The registry entry creates a **direct link to the CVC-Viewer EXE file**
+* **Do NOT move or rename the EXE after applying the registry**
+
+    * Doing so will **break the context-menu link**
+* If you move the EXE, you must **re-apply the registry file**
+
+### How to Register the Context Menu
+
+1. Extract the Windows ZIP file
+2. Ensure the EXE file is placed in its **final location**
+3. Double-click:
+
+   ```
+   CVC_Registry.reg
+   ```
+4. Confirm the Windows registry security dialog
+
+After registration, you can right-click a CV certificate file and open it directly using **CVC-Viewer**.
 
 ---
 
