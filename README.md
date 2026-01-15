@@ -34,6 +34,9 @@ This tool provides a **human-readable view** of CV Certificates without assuming
     * Public Key parameters
     * Validity dates
     * Authorization roles and permissions
+    * Authenticated Request / Outer Signature / Outer CAR
+    * RSA with PKCSv1.5 and PSS (SHA1, SHA256, SHA512)
+    * ECDSA (SHA1, SHA256, SHA512)
 * Supports **single certificates** and **certificate chains**
 
 ---
