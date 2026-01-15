@@ -53,10 +53,14 @@ jobs:
             **/build/reports/
             **/build/test-results/
 
-      - name: Download Artifacts
+      - name: Upload Release to Artifact
         uses: actions/download-artifact@v4
+        if: always()
         with:
-          path: artifacts
+          name: Releases
+          path: |
+            build/libs/*.jar
+            build/distributions/*.zip
 
       - name: Publish Test Results
         uses: mikepenz/action-junit-report@v4
