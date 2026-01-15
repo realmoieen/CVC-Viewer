@@ -56,18 +56,18 @@ shadowJar {
 }
 launch4j {
     mainClassName = 'com.moieen.cvc.gui.cvcviewer.Lunch'
-    icon = "${project.rootDir}/src/main/resources/certificate16x16.ico"
+    icon = "${project.rootDir}/icons/cvc-logo.ico"
     classpath = []
     jarTask = project.tasks.shadowJar
     errTitle = "Error CVC-Viewer"
     version = project.version
-    textVersion = "{$project.version}"
+    textVersion = "$project.version"
     description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
     copyright = "Copyright (c) 2026 - Moieen Abbas"
-    companyName = "Moieen Abbas (realmoieen@gmail.com)(+923012605119)"
+    companyName = "Moieen Abbas - https://github.com/realmoieen"
     jreMinVersion = '1.8.0_131'
     supportUrl = "https://github.com/realmoieen/CVC-Viewer/issues"
-    productName="${project.name}-${project.version}.exe"
+    outfile="${project.name}-${project.version}.exe"
 }
 createExe{
     dependsOn test

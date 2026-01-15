@@ -22,7 +22,7 @@ class CertificateParserTest {
     static Stream<File> certificateFiles() throws URISyntaxException {
 
         File dir = new File(
-                Objects.requireNonNull(CertificateParser.class
+                Objects.requireNonNull(CVCertificatePEMUtil.class
                         .getClassLoader()
                         .getResource("certificates")
                         .toURI()
@@ -40,10 +40,11 @@ class CertificateParserTest {
     @MethodSource("certificateFiles")
     void shouldParseCertificate(File certificateFile) throws Exception {
 
-        List<CVCertificate> certs = CertificateParser.loadCertificates(certificateFile);
+        List<CVCertificate> certs = CVCertificatePEMUtil.loadCertificates(certificateFile);
 
 
         for (CVCertificate cert : certs) {
+            System.out.println(cert.toString());
             Assertions.assertAll(
                     () -> Assertions.assertNotNull(cert),
                     () -> Assertions.assertNotNull(cert, () -> "Failed parsing: " + certificateFile.getName())

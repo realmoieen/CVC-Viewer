@@ -1,55 +1,130 @@
 package com.moieen.cvc.gui.cvcviewer;
 
-import java.awt.Image;
-import java.security.spec.RSAPublicKeySpec;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import javax.swing.ImageIcon;
-import javax.swing.UIManager;
-import javax.swing.event.ListSelectionEvent;
-
+import com.moieen.cvc.gui.cvcviewer.path.CvcTreeBuilder;
+import com.moieen.cvc.gui.cvcviewer.path.CvcTreeNode;
 import de.bsi.testbedutils.cvc.cvcertificate.*;
+import de.bsi.testbedutils.cvc.cvcertificate.exception.CVBaseException;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVInvalidKeySourceException;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVKeyTypeNotSupportedException;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVMissingKeyException;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECCurve;
 
+import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.TreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.spec.RSAPublicKeySpec;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  *
  * @author Moieen Abbas
  */
-public class CVCViewer extends javax.swing.JFrame {
+public class CVCViewer extends JFrame {
 
-    DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
-    Map<String, String> map_tableData = new LinkedHashMap<>();
+    private DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
+    private Map<String, String> map_tableData = new LinkedHashMap<>();
+    private List<CVCertificate> currentChain;   // leaf → root
+    private CVCertificate currentCertificate;   // selected certificate
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private JButton btn_ok;
+    private JTextArea cert_status_textarea;
+    private JButton copyToFileButton;
+    private JTable detail_table;
+    private JLabel general_caReference;
+    private JLabel general_holderRefernce;
+    private JLabel general_labelTO;
+    private JLabel general_purposeLable;
+    private JLabel general_validFrom;
+    private JLabel general_validFromLabel;
+    private JLabel general_validTo;
+    private JLabel jLabel1;
+    private JLabel jLabel2;
+    private JLabel jLabel3;
+    private JLabel jLabel4;
+    private JLabel jLabel5;
+    private JLayeredPane jLayeredPane1;
+    private JPanel jPanel1;
+    private JPanel jPanel2;
+    private JPanel jPanel4;
+    private JScrollPane jScrollPane1;
+    private JScrollPane jScrollPane2;
+    private JScrollPane jScrollPane3;
+    private JScrollPane jScrollPane4;
+    private JSeparator jSeparator1;
+    private JSeparator jSeparator2;
+    private JTabbedPane jTabbedPane3;
+    private JLabel label_certIcon;
+    private JTextArea label_generlPurpose;
+    private JPanel path_tab;
+    private JTree path_tree;
+    private JTextArea selectedRowDetailTextArea;
+    private JTabbedPane tab_detail;
+    private JButton view_cert_button;
+    // End of variables declaration//GEN-END:variables
 
     /**
      * Creates new form NewJFrame
      */
-    public CVCViewer(CVCertificate obj_CVCertificate) {
+    public CVCViewer(List<CVCertificate> list_cvcerts, int defaultCloseOperation) {
         init();
+        this.setDefaultCloseOperation(defaultCloseOperation);
+        setLocationRelativeTo(null);
         try {
-            setCertificateDetail(obj_CVCertificate);
+            setCertificateDetail(list_cvcerts);
         } catch (Exception e) {
-            Lunch.showError(e);
+            ErrorDialogUtil.showError(this,e);
             System.exit(0);
         }
     }
 
-    public CVCViewer() {
-        init();
+    /**
+     * @param objCertificate the command line arguments
+     */
+    public static void display(List<CVCertificate> objCertificate, int defaultCloseOperation) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
+         */
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+
+        }
+        //</editor-fold>
+        //</editor-fold>
+
+        /* Create and display the form */
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new CVCViewer(objCertificate, defaultCloseOperation).setVisible(true);
+            }
+        });
     }
 
     private void init() {
         this.setTitle("CV Certificate Viewer");
         this.setResizable(false);
-        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        this.setIconImage(new javax.swing.ImageIcon(getClass().getResource("/resized.png")).getImage());
+        this.setIconImage(new ImageIcon(getClass().getResource("/images/cvc-logo.png")).getImage());
         initComponents();
-        label_certIcon.setIcon(new ImageIcon(new ImageIcon("/certificateicon.png").getImage().getScaledInstance(20, 20, Image.SCALE_DEFAULT)));
+        label_certIcon.setIconTextGap(5);
         detail_table.getSelectionModel().addListSelectionListener((ListSelectionEvent event) -> {
             String selectedData = null;
             int selectedRow = detail_table.getSelectedRow();
@@ -57,75 +132,121 @@ public class CVCViewer extends javax.swing.JFrame {
             selectedData = map_tableData.getOrDefault(selectedData, selectedData);
             selectedRowDetailTextArea.setText(selectedData);
         });
+        path_tree.addTreeSelectionListener(e -> {
+
+            CvcTreeNode selectedNode = (CvcTreeNode) path_tree.getLastSelectedPathComponent();
+            if (selectedNode == null) return;
+
+            CVCertificate cert = selectedNode.getCertificate();
+
+            // 1) Perform validity check
+            String status = cert.getStatusString();
+
+            // 2) Update textarea
+            cert_status_textarea.setText(status);
+
+            // 3) Enable / disable View button
+            boolean isLeaf = selectedNode.isLeaf();
+            view_cert_button.setEnabled(!isLeaf);
+        });
     }
 
-    private void setCertificateDetail(CVCertificate obj_CVCertificate) {
+    private List<CVCertificate> buildChainToRoot(CvcTreeNode node) {
 
-        general_holderRefernce.setText(obj_CVCertificate.getCertHolderRef());
-        general_caReference.setText(obj_CVCertificate.getCertAuthRef());
-        CVHolderAuth cert_holderAuth = obj_CVCertificate.getCertHolderAuth();
-        if (obj_CVCertificate.isReqCert()) {
-            general_purposeLable.setText("This is a CV Certificate Request with no purpose(s): ");
-            label_generlPurpose.setText("• CV Request\n");
-            general_validFromLabel.setText("");
-            general_validFrom.setText("");
-            general_labelTO.setText("");
-            general_validTo.setText("");
-        } else if (obj_CVCertificate.hasOuterSignature()) {
-            general_purposeLable.setText("This is a CVC Authenticated Request with outer signature");
-            label_generlPurpose.setText("• Authenticated Request\n"
-                    + "• Outer CA Reference: " + obj_CVCertificate.getOuterAuthRef());
-            general_validFromLabel.setText("");
-            general_validFrom.setText("");
-            general_labelTO.setText("");
-            general_validTo.setText("");
+        List<CVCertificate> chain = new ArrayList<>();
+
+        TreeNode current = node;
+
+        while (current instanceof CvcTreeNode) {
+            CvcTreeNode cvcNode = (CvcTreeNode) current;
+            chain.add(cvcNode.getCertificate());
+            current = cvcNode.getParent();
+        }
+
+        return chain; // leaf → root order
+    }
+
+
+    private void setCertificateDetail(List<CVCertificate> list_CVCertificate) {
+        currentChain = list_CVCertificate;
+        currentCertificate = currentChain.get(0);
+        general_holderRefernce.setText(currentCertificate.getCertHolderRef());
+        general_caReference.setText(currentCertificate.getCertAuthRef());
+        CVHolderAuth cert_holderAuth = currentCertificate.getCertHolderAuth();
+        ImageIcon imageIcon;
+        try {
+            currentCertificate.checkValidity();
+            imageIcon = new ImageIcon(getClass().getResource("/images/cvc-valid.png"));
+        } catch (CertificateNotYetValidException | CertificateExpiredException e) {
+            imageIcon = new ImageIcon(getClass().getResource("/images/cvc-warning.png"));
+        }
+        label_certIcon.setIcon(new ImageIcon(imageIcon.getImage().getScaledInstance(52, label_certIcon.getHeight(), Image.SCALE_SMOOTH)));
+        this.setIconImage(imageIcon.getImage());
+        String status = "\n\n\n" + currentCertificate.getStatusString();
+        if (currentCertificate.isReqCert()) {
+            if (currentCertificate.hasOuterSignature()) {
+                general_purposeLable.setText("This is a CVC Authenticated Request with outer signature");
+                label_generlPurpose.setText("\u2022 Authenticated Request" + status);
+                general_validFromLabel.setText("Outer CA Reference:");
+                general_validFrom.setText(currentCertificate.getOuterAuthRef());
+                general_labelTO.setText("");
+                general_validTo.setText("");
+            } else {
+                general_purposeLable.setText("This is a CV Certificate Request with no purpose(s): ");
+                label_generlPurpose.setText("\u2022 CV Request" + status);
+                general_validFromLabel.setText("");
+                general_validFrom.setText("");
+                general_labelTO.setText("");
+                general_validTo.setText("");
+            }
         } else {
             general_purposeLable.setText("This CV Certificate (CVC) is intented for the following purpose(s):");
             if (cert_holderAuth != null && cert_holderAuth.getAuth() != null) {
-                CVAuthorization cert_auth = obj_CVCertificate.getCertHolderAuth().getAuth();
-                label_generlPurpose.setText("• " + cert_auth.getRole().name());
+                CVAuthorization cert_auth = currentCertificate.getCertHolderAuth().getAuth();
+                label_generlPurpose.setText("\u2022 " + cert_auth.getRole().name() + status);
             }
-            general_validFrom.setText(dateFormat.format(obj_CVCertificate.getEffDate().getDate()));
-            general_validTo.setText(dateFormat.format(obj_CVCertificate.getExpDate().getDate()));
+            general_validFrom.setText(dateFormat.format(currentCertificate.getEffDate().getDate()));
+            general_validTo.setText(dateFormat.format(currentCertificate.getExpDate().getDate()));
         }
-        populateDetailTableData(obj_CVCertificate);
+        populateDetailTableData();
+        CvcTreeBuilder.buildChainTree(path_tree, currentChain);
     }
 
-    void populateDetailTableData(CVCertificate obj_CVCertificate) {
+    void populateDetailTableData() {
 
-        map_tableData.put("Version", obj_CVCertificate.getProfileId() + "");
-        if (obj_CVCertificate.getCertHolderRef() != null) {
-            map_tableData.put("Holder Reference", obj_CVCertificate.getCertHolderRef());
+        map_tableData.put("Version", currentCertificate.getProfileId() + "");
+        if (currentCertificate.getCertHolderRef() != null) {
+            map_tableData.put("Holder Reference", currentCertificate.getCertHolderRef());
         }
-        if (obj_CVCertificate.getCertHolderAuth() != null && obj_CVCertificate.getCertHolderAuth().getAuth() != null) {
-            CVAuthorization auth = obj_CVCertificate.getCertHolderAuth().getAuth();
+        if (currentCertificate.getCertHolderAuth() != null && currentCertificate.getCertHolderAuth().getAuth() != null) {
+            CVAuthorization auth = currentCertificate.getCertHolderAuth().getAuth();
             map_tableData.put("Role", auth.getRole().name());
             map_tableData.put("Term Type", auth.getTermType().name());
-            map_tableData.put("Authorization", getCVAutorizationInfo(obj_CVCertificate.getCertHolderAuth()));
+            map_tableData.put("Authorization", getCVAutorizationInfo(currentCertificate.getCertHolderAuth()));
         }
-        if (obj_CVCertificate.getCertAuthRef() != null) {
-            map_tableData.put("CA Reference", obj_CVCertificate.getCertAuthRef());
+        if (currentCertificate.getCertAuthRef() != null) {
+            map_tableData.put("CA Reference", currentCertificate.getCertAuthRef());
         }
-        if (obj_CVCertificate.hasOuterSignature()) {
-            map_tableData.put("Outer CA Reference", obj_CVCertificate.getOuterAuthRef());
+        if (currentCertificate.hasOuterSignature()) {
+            map_tableData.put("Outer CA Reference", currentCertificate.getOuterAuthRef());
         }
-        if (obj_CVCertificate.getEffDate() != null && obj_CVCertificate.getEffDate().getDate() != null) {
-            map_tableData.put("Valid From", dateFormat.format(obj_CVCertificate.getEffDate().getDate()));
+        if (currentCertificate.getEffDate() != null && currentCertificate.getEffDate().getDate() != null) {
+            map_tableData.put("Valid From", dateFormat.format(currentCertificate.getEffDate().getDate()));
         }
-        if (obj_CVCertificate.getExpDate() != null && obj_CVCertificate.getExpDate().getDate() != null) {
-            map_tableData.put("Valid To", dateFormat.format(obj_CVCertificate.getExpDate().getDate()));
+        if (currentCertificate.getExpDate() != null && currentCertificate.getExpDate().getDate() != null) {
+            map_tableData.put("Valid To", dateFormat.format(currentCertificate.getExpDate().getDate()));
         }
-        getCVExtention(obj_CVCertificate.getExtension());
+        getCVExtention(currentCertificate.getExtension());
         try {
-            getPublicKeyDetails(obj_CVCertificate);
+            getPublicKeyDetails(currentCertificate);
         } catch (Exception e) {
             map_tableData.put("Public Key Detail", "Not available");
         }
-        if (obj_CVCertificate.getSignature() != null) {
-            map_tableData.put("Signature", obj_CVCertificate.getSignature().getHexSplit(":", "", 48));
+        if (currentCertificate.getSignature() != null) {
+            map_tableData.put("Signature", currentCertificate.getSignature().getHexSplit(":", "", 48));
         }
-        if (obj_CVCertificate.hasOuterSignature()) {
-            map_tableData.put("Outer Signature", obj_CVCertificate.getOuterSignature().getHexSplit(":", "", 48));
+        if (currentCertificate.hasOuterSignature()) {
+            map_tableData.put("Outer Signature", currentCertificate.getOuterSignature().getHexSplit(":", "", 48));
         }
         String[][] table_data = new String[map_tableData.size()][2];
         int i = 0;
@@ -135,14 +256,15 @@ public class CVCViewer extends javax.swing.JFrame {
             table_data[i][1] = entry.getValue();
             i++;
         }
-        detail_table.setModel(new javax.swing.table.DefaultTableModel(table_data, new String[]{"Field", "Value"}));
+        detail_table.setModel(new DefaultTableModel(table_data, new String[]{"Field", "Value"}));
     }
 
     public void getPublicKeyDetails(CVCertificate obj_cvCert) throws Exception {
         if (obj_cvCert.getPublicKey().getAlgorithm().name().contains("RSA")) {
             getRSAPublicKeyInfos(obj_cvCert);
         } else if (obj_cvCert.getPublicKey().getAlgorithm().name().contains("ECDSA")) {
-            getECPublicKeyInfos(obj_cvCert);;
+            getECPublicKeyInfos(obj_cvCert);
+            ;
         }
     }
 
@@ -253,6 +375,7 @@ public class CVCViewer extends javax.swing.JFrame {
             out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_AgeVerification));
             out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_CommunityIDVerification));
             out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_RestrictedIdentification));
+            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_PrivilegedTerminal));
             out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_CANAllowed));
             out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_PINManagement));
             out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_InstallCertificate));
@@ -285,11 +408,11 @@ public class CVCViewer extends javax.swing.JFrame {
 
             out.append("Write:\n");
             out.append("\t");
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG17));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG18));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG19));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG20));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG21));
+            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG17));
+            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG18));
+            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG19));
+            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG20));
+            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG21));
             out.append("\n");
         }
         if (TermType.SignatureTerminal.equals(cvAuthorization.getTermType())) {
@@ -347,14 +470,14 @@ public class CVCViewer extends javax.swing.JFrame {
             for (CVExtensionData cvExtensionData : extension.getExtensions()) {
                 if (CVExtensionType.extDescription.equals(cvExtensionData.getType())) {
                     out.append("Extended Description:\n");
-                    out.append(cvExtensionData.getHash1().getHexSplit(":", "\t", 48));
-                }
-                if (CVExtensionType.extSector.equals(cvExtensionData.getType())) {
+                } else if (CVExtensionType.extSector.equals(cvExtensionData.getType())) {
                     out.append("Extended Sector:\n");
-                    out.append(cvExtensionData.getHash1().getHexSplit(":", "\t", 48));
-                    if (cvExtensionData.getHash2() != null) {
-                        out.append(cvExtensionData.getHash2().getHexSplit(":", "\t", 48));
-                    }
+                } else {
+                    out.append(cvExtensionData.getType().name()).append(":\n");
+                }
+                out.append(cvExtensionData.getHash1().getHexSplit(":", "\t", 48));
+                if (cvExtensionData.getHash2() != null) {
+                    out.append(cvExtensionData.getHash2().getHexSplit(":", "\t", 48));
                 }
             }
             map_tableData.put("CV extensions", out.toString());
@@ -371,57 +494,65 @@ public class CVCViewer extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jTabbedPane3 = new javax.swing.JTabbedPane();
-        tab_detail = new javax.swing.JTabbedPane();
-        jPanel1 = new javax.swing.JPanel();
-        jLayeredPane1 = new javax.swing.JLayeredPane();
-        label_certIcon = new javax.swing.JLabel();
-        jSeparator1 = new javax.swing.JSeparator();
-        jLabel1 = new javax.swing.JLabel();
-        jSeparator2 = new javax.swing.JSeparator();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
-        general_validFromLabel = new javax.swing.JLabel();
-        general_holderRefernce = new javax.swing.JLabel();
-        general_caReference = new javax.swing.JLabel();
-        general_validFrom = new javax.swing.JLabel();
-        general_labelTO = new javax.swing.JLabel();
-        general_validTo = new javax.swing.JLabel();
-        general_purposeLable = new javax.swing.JLabel();
-        label_generlPurpose = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        selectedRowDetailTextArea = new javax.swing.JTextArea();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        detail_table = new javax.swing.JTable(){
+        jTabbedPane3 = new JTabbedPane();
+        tab_detail = new JTabbedPane();
+        jPanel1 = new JPanel();
+        jLayeredPane1 = new JLayeredPane();
+        label_certIcon = new JLabel();
+        jSeparator1 = new JSeparator();
+        jLabel1 = new JLabel();
+        jSeparator2 = new JSeparator();
+        jLabel2 = new JLabel();
+        jLabel3 = new JLabel();
+        general_validFromLabel = new JLabel();
+        general_holderRefernce = new JLabel();
+        general_caReference = new JLabel();
+        general_validFrom = new JLabel();
+        general_labelTO = new JLabel();
+        general_validTo = new JLabel();
+        general_purposeLable = new JLabel();
+        label_generlPurpose = new JTextArea();
+        jPanel2 = new JPanel();
+        jScrollPane2 = new JScrollPane();
+        selectedRowDetailTextArea = new JTextArea();
+        jScrollPane1 = new JScrollPane();
+        detail_table = new JTable() {
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return false;
             }
         };
-        btn_ok = new javax.swing.JButton();
+        path_tab = new JPanel();
+        jPanel4 = new JPanel();
+        jScrollPane3 = new JScrollPane();
+        path_tree = new JTree();
+        view_cert_button = new JButton();
+        jLabel4 = new JLabel();
+        jLabel5 = new JLabel();
+        jScrollPane4 = new JScrollPane();
+        cert_status_textarea = new JTextArea();
+        btn_ok = new JButton();
+        copyToFileButton = new JButton();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel1.setBackground(new Color(255, 255, 255));
 
-        jLayeredPane1.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+        jLayeredPane1.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 
-        label_certIcon.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
+        label_certIcon.setFont(new Font("Tahoma", 1, 12)); // NOI18N
         label_certIcon.setText("Card Verifiable Certificate (CVC) Information");
 
-        jSeparator1.setBackground(new java.awt.Color(0, 0, 0));
+        jSeparator1.setBackground(new Color(0, 0, 0));
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resized.png"))); // NOI18N
+        jSeparator2.setBackground(new Color(0, 0, 0));
 
-        jSeparator2.setBackground(new java.awt.Color(0, 0, 0));
-
-        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel2.setFont(new Font("Tahoma", 1, 11)); // NOI18N
         jLabel2.setText("Holder Reference:");
 
-        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel3.setFont(new Font("Tahoma", 1, 11)); // NOI18N
         jLabel3.setText("CA Reference:");
 
-        general_validFromLabel.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        general_validFromLabel.setFont(new Font("Tahoma", 1, 11)); // NOI18N
         general_validFromLabel.setText("Valid from");
 
         general_holderRefernce.setText("PK/PKDVCA1/DVPK1");
@@ -430,243 +561,421 @@ public class CVCViewer extends javax.swing.JFrame {
 
         general_validFrom.setText("20/01/2020");
 
-        general_labelTO.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        general_labelTO.setFont(new Font("Tahoma", 1, 11)); // NOI18N
         general_labelTO.setText("to");
 
         general_validTo.setText("20/09/2020");
 
-        general_purposeLable.setFont(new java.awt.Font("Tahoma", 1, 10)); // NOI18N
+        general_purposeLable.setFont(new Font("Tahoma", 1, 10)); // NOI18N
         general_purposeLable.setText("This CV Certificate (CVC) is intented for the following purpose(s):");
 
-        label_generlPurpose.setText("• CVCA ");
+        label_generlPurpose.setEditable(false);
+        label_generlPurpose.setFont(new Font("Tahoma", 0, 13)); // NOI18N
+        label_generlPurpose.setRows(7);
+        label_generlPurpose.setText("� CVCA ");
         label_generlPurpose.setToolTipText("");
-        label_generlPurpose.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
-        javax.swing.GroupLayout jLayeredPane1Layout = new javax.swing.GroupLayout(jLayeredPane1);
+        jLayeredPane1.setLayer(label_certIcon, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(jSeparator1, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(jLabel1, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(jSeparator2, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(jLabel2, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(jLabel3, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_validFromLabel, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_holderRefernce, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_caReference, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_validFrom, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_labelTO, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_validTo, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(general_purposeLable, JLayeredPane.DEFAULT_LAYER);
+        jLayeredPane1.setLayer(label_generlPurpose, JLayeredPane.DEFAULT_LAYER);
+
+        GroupLayout jLayeredPane1Layout = new GroupLayout(jLayeredPane1);
         jLayeredPane1.setLayout(jLayeredPane1Layout);
         jLayeredPane1Layout.setHorizontalGroup(
-            jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator1)
-                    .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                        .addGap(36, 36, 36)
-                        .addComponent(label_generlPurpose, javax.swing.GroupLayout.PREFERRED_SIZE, 304, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))))
-            .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                .addGap(27, 27, 27)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(label_certIcon)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                        .addGap(24, 24, 24)
-                        .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(general_validFromLabel, javax.swing.GroupLayout.Alignment.TRAILING))
-                        .addGap(18, 18, 18)
-                        .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                                .addComponent(general_validFrom, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(general_labelTO)
-                                .addGap(18, 18, 18)
-                                .addComponent(general_validTo, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(general_holderRefernce, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
-                                .addComponent(general_caReference, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                    .addComponent(jSeparator2)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jLayeredPane1Layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(general_purposeLable, javax.swing.GroupLayout.PREFERRED_SIZE, 374, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(jLayeredPane1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jSeparator1))
+                        .addGroup(GroupLayout.Alignment.TRAILING, jLayeredPane1Layout.createSequentialGroup()
+                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addGroup(GroupLayout.Alignment.TRAILING, jLayeredPane1Layout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addComponent(label_certIcon, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addGroup(jLayeredPane1Layout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                                        .addGroup(jLayeredPane1Layout.createSequentialGroup()
+                                                                .addGap(24, 24, 24)
+                                                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                                                        .addComponent(jLabel2)
+                                                                        .addComponent(jLabel3, GroupLayout.Alignment.TRAILING)
+                                                                        .addComponent(general_validFromLabel, GroupLayout.Alignment.TRAILING))
+                                                                .addGap(18, 18, 18)
+                                                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                                                        .addGroup(jLayeredPane1Layout.createSequentialGroup()
+                                                                                .addComponent(general_validFrom, GroupLayout.PREFERRED_SIZE, 83, GroupLayout.PREFERRED_SIZE)
+                                                                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                                                                .addComponent(general_labelTO)
+                                                                                .addGap(18, 18, 18)
+                                                                                .addComponent(general_validTo, GroupLayout.PREFERRED_SIZE, 123, GroupLayout.PREFERRED_SIZE))
+                                                                        .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+                                                                                .addComponent(general_holderRefernce, GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                                                                                .addComponent(general_caReference, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                                        .addComponent(jSeparator2)
+                                                        .addGroup(GroupLayout.Alignment.TRAILING, jLayeredPane1Layout.createSequentialGroup()
+                                                                .addGap(0, 16, Short.MAX_VALUE)
+                                                                .addComponent(general_purposeLable, GroupLayout.PREFERRED_SIZE, 374, GroupLayout.PREFERRED_SIZE))))
+                                        .addGroup(jLayeredPane1Layout.createSequentialGroup()
+                                                .addGap(27, 27, 27)
+                                                .addComponent(jLabel1)
+                                                .addGap(0, 0, Short.MAX_VALUE))
+                                        .addGroup(GroupLayout.Alignment.TRAILING, jLayeredPane1Layout.createSequentialGroup()
+                                                .addGap(0, 0, Short.MAX_VALUE)
+                                                .addComponent(label_generlPurpose, GroupLayout.PREFERRED_SIZE, 364, GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap())
         );
         jLayeredPane1Layout.setVerticalGroup(
-            jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                .addGap(16, 16, 16)
-                .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jLayeredPane1Layout.createSequentialGroup()
-                        .addGap(5, 5, 5)
-                        .addComponent(label_certIcon, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(2, 2, 2))
-                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(general_purposeLable)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(label_generlPurpose, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(27, 27, 27)
-                .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(general_holderRefernce))
-                .addGap(25, 25, 25)
-                .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(general_caReference))
-                .addGap(25, 25, 25)
-                .addGroup(jLayeredPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(general_validFromLabel)
-                    .addComponent(general_validFrom)
-                    .addComponent(general_labelTO)
-                    .addComponent(general_validTo))
-                .addContainerGap(98, Short.MAX_VALUE))
+                jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(jLayeredPane1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(label_certIcon, GroupLayout.PREFERRED_SIZE, 37, GroupLayout.PREFERRED_SIZE)
+                                .addGap(2, 2, 2)
+                                .addComponent(jLabel1)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jSeparator1, GroupLayout.PREFERRED_SIZE, 10, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(general_purposeLable)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(label_generlPurpose, GroupLayout.PREFERRED_SIZE, 71, GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jSeparator2, GroupLayout.PREFERRED_SIZE, 10, GroupLayout.PREFERRED_SIZE)
+                                .addGap(27, 27, 27)
+                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel2)
+                                        .addComponent(general_holderRefernce))
+                                .addGap(25, 25, 25)
+                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel3)
+                                        .addComponent(general_caReference))
+                                .addGap(25, 25, 25)
+                                .addGroup(jLayeredPane1Layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(general_validFromLabel)
+                                        .addComponent(general_validFrom)
+                                        .addComponent(general_labelTO)
+                                        .addComponent(general_validTo))
+                                .addContainerGap(107, Short.MAX_VALUE))
         );
-        jLayeredPane1.setLayer(label_certIcon, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(jSeparator1, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(jLabel1, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(jSeparator2, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(jLabel2, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(jLabel3, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_validFromLabel, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_holderRefernce, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_caReference, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_validFrom, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_labelTO, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_validTo, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(general_purposeLable, javax.swing.JLayeredPane.DEFAULT_LAYER);
-        jLayeredPane1.setLayer(label_generlPurpose, javax.swing.JLayeredPane.DEFAULT_LAYER);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        GroupLayout jPanel1Layout = new GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLayeredPane1)
-                .addContainerGap())
+                jPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLayeredPane1)
+                                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLayeredPane1))
+                jPanel1Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLayeredPane1))
         );
 
         tab_detail.addTab("General", jPanel1);
 
-        jPanel2.setBackground(new java.awt.Color(255, 255, 255));
+        jPanel2.setBackground(new Color(255, 255, 255));
 
         selectedRowDetailTextArea.setEditable(false);
         selectedRowDetailTextArea.setColumns(20);
         selectedRowDetailTextArea.setRows(5);
         jScrollPane2.setViewportView(selectedRowDetailTextArea);
 
-        jScrollPane1.setBackground(new java.awt.Color(255, 255, 255));
+        jScrollPane1.setBackground(new Color(255, 255, 255));
         jScrollPane1.setBorder(null);
 
-        detail_table.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null},
-                {null, null},
-                {null, null},
-                {null, null}
-            },
-            new String [] {
-                "Field", "Value"
-            }
+        detail_table.setModel(new DefaultTableModel(
+                new Object[][]{
+                        {null, null},
+                        {null, null},
+                        {null, null},
+                        {null, null}
+                },
+                new String[]{
+                        "Field", "Value"
+                }
         ));
-        detail_table.setGridColor(new java.awt.Color(255, 255, 255));
-        detail_table.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        detail_table.setGridColor(new Color(255, 255, 255));
+        detail_table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         detail_table.setShowHorizontalLines(false);
         detail_table.setShowVerticalLines(false);
         detail_table.getTableHeader().setResizingAllowed(false);
         detail_table.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(detail_table);
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        GroupLayout jPanel2Layout = new GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane2)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 409, Short.MAX_VALUE))
-                .addContainerGap())
+                jPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel2Layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jScrollPane2)
+                                        .addComponent(jScrollPane1, GroupLayout.DEFAULT_SIZE, 409, Short.MAX_VALUE))
+                                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(29, Short.MAX_VALUE))
+                jPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane1, GroupLayout.PREFERRED_SIZE, 210, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane2, GroupLayout.PREFERRED_SIZE, 177, GroupLayout.PREFERRED_SIZE)
+                                .addContainerGap(32, Short.MAX_VALUE))
         );
 
         tab_detail.addTab("Details", jPanel2);
 
+        path_tab.setBackground(new Color(255, 255, 255));
+
+        jPanel4.setBackground(new Color(255, 255, 255));
+        jPanel4.setBorder(BorderFactory.createEtchedBorder());
+
+        path_tree.setShowsRootHandles(true);
+        path_tree.setRootVisible(true);
+        jScrollPane3.setViewportView(path_tree);
+
+        view_cert_button.setText("View Certificate");
+        view_cert_button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                view_cert_buttonActionPerformed(evt);
+            }
+        });
+
+        GroupLayout jPanel4Layout = new GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+                jPanel4Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel4Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                        .addComponent(jScrollPane3)
+                                        .addGroup(GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                                                .addGap(0, 0, Short.MAX_VALUE)
+                                                .addComponent(view_cert_button)))
+                                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+                jPanel4Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel4Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jScrollPane3, GroupLayout.PREFERRED_SIZE, 242, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(view_cert_button)
+                                .addContainerGap(12, Short.MAX_VALUE))
+        );
+
+        jLabel4.setText("CV Certificate Path");
+
+        jLabel5.setText("Certificate Status:");
+
+        cert_status_textarea.setEditable(false);
+        cert_status_textarea.setColumns(20);
+        cert_status_textarea.setFont(new Font("Tahoma", 0, 13)); // NOI18N
+        cert_status_textarea.setRows(2);
+        cert_status_textarea.setText("This Certificate is OK");
+        cert_status_textarea.setBorder(BorderFactory.createCompoundBorder());
+        jScrollPane4.setViewportView(cert_status_textarea);
+
+        GroupLayout path_tabLayout = new GroupLayout(path_tab);
+        path_tab.setLayout(path_tabLayout);
+        path_tabLayout.setHorizontalGroup(
+                path_tabLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(GroupLayout.Alignment.TRAILING, path_tabLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(path_tabLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                        .addComponent(jScrollPane4, GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
+                                        .addComponent(jPanel4, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addGroup(GroupLayout.Alignment.LEADING, path_tabLayout.createSequentialGroup()
+                                                .addGroup(path_tabLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jLabel4)
+                                                        .addComponent(jLabel5))
+                                                .addGap(0, 0, Short.MAX_VALUE)))
+                                .addContainerGap())
+        );
+        path_tabLayout.setVerticalGroup(
+                path_tabLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(path_tabLayout.createSequentialGroup()
+                                .addGap(5, 5, 5)
+                                .addComponent(jLabel4, GroupLayout.PREFERRED_SIZE, 16, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jPanel4, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jLabel5)
+                                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane4, GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
+                                .addContainerGap())
+        );
+
+        tab_detail.addTab("Path", path_tab);
+
         btn_ok.setText("OK");
-        btn_ok.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
+        btn_ok.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
                 btn_okActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        copyToFileButton.setText("Copy To File...");
+        copyToFileButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                copyToFileButtonActionPerformed(evt);
+            }
+        });
+
+        GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(tab_detail)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(btn_ok, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                                        .addComponent(tab_detail)
+                                        .addGroup(layout.createSequentialGroup()
+                                                .addGap(0, 0, Short.MAX_VALUE)
+                                                .addComponent(copyToFileButton)
+                                                .addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(btn_ok, GroupLayout.PREFERRED_SIZE, 78, GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap())
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(tab_detail)
-                .addGap(18, 18, 18)
-                .addComponent(btn_ok)
-                .addContainerGap())
+                layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(tab_detail)
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+                                        .addComponent(btn_ok)
+                                        .addComponent(copyToFileButton))
+                                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btn_okActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_okActionPerformed
+    private void btn_okActionPerformed(ActionEvent evt) {//GEN-FIRST:event_btn_okActionPerformed
         // TODO add your handling code here:
-        System.exit(0);
+        if (getDefaultCloseOperation() == WindowConstants.EXIT_ON_CLOSE) {
+            System.exit(0);
+        } else {
+            this.dispose();
+        }
     }//GEN-LAST:event_btn_okActionPerformed
 
-    /**
-     * @param objCertificate the command line arguments
-     */
-    public static void display(CVCertificate objCertificate) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
+    private void view_cert_buttonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_view_cert_buttonActionPerformed
+        CvcTreeNode selectedNode = (CvcTreeNode) path_tree.getLastSelectedPathComponent();
+        if (selectedNode == null) return;
 
+        // Build chain from selected node to root
+        List<CVCertificate> chain = buildChainToRoot(selectedNode);
+
+        // Display in viewer
+        CVCViewer.display(chain, WindowConstants.DISPOSE_ON_CLOSE);
+    }//GEN-LAST:event_view_cert_buttonActionPerformed
+
+    private void copyToFileButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_copyToFileButtonActionPerformed
+        if (currentCertificate == null) {
+            JOptionPane.showMessageDialog(this, "No certificate selected");
+            return;
         }
-        //</editor-fold>
-        //</editor-fold>
 
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new CVCViewer(objCertificate).setVisible(true);
+        JFileChooser chooser = new JFileChooser(System.getProperty("user.home"));
+        chooser.setDialogTitle("Save Certificate");
+        String fileName = currentCertificate.getCertHolderRef() != null ? currentCertificate.getCertHolderRef() : "certificate";
+        if (currentCertificate.isReqCert()) {
+            fileName = fileName + ".cvreq";
+        } else {
+            fileName = fileName + ".cvcert";
+        }
+        chooser.setSelectedFile(new File(fileName));
+        String[] formats;
+        if (currentChain.size() > 1) {
+            formats = new String[]{
+                    "Binary DER",
+                    "Base64 Single Certificate",
+                    "Base64 Chain (Comma Separated)",
+                    "PEM Single Certificate",
+                    "PEM Chain"
+            };
+        } else {
+            formats = new String[]{
+                    "Binary DER",
+                    "Base64",
+                    "PEM",
+            };
+        }
+
+        String format = (String) JOptionPane.showInputDialog(
+                this,
+                "Select output format:",
+                "Save As",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                formats,
+                formats[0]
+        );
+
+        if (format == null) return;
+
+        int result = chooser.showSaveDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) return;
+
+        File file = chooser.getSelectedFile();
+        byte[] filedata = null;
+        try {
+            switch (format) {
+
+                case "Binary DER":
+                    filedata = CVCertificatePEMUtil.encodeCertificateToDer(currentCertificate);
+                    break;
+
+                case "Base64 Single Certificate":
+                case "Base64":
+                    filedata = CVCertificatePEMUtil.encodeCertificateToBase64(currentCertificate).getBytes(StandardCharsets.UTF_8);
+                    break;
+
+                case "Base64 Chain (Comma Separated)":
+                    filedata = CVCertificatePEMUtil.encodeCertificateChainToBase64(currentChain).getBytes(StandardCharsets.UTF_8);
+                    break;
+                case "PEM Single Certificate":
+                case "PEM":
+                    filedata = CVCertificatePEMUtil.encodeCertificateToPEM(currentCertificate).getBytes(StandardCharsets.UTF_8);
+                    break;
+
+                case "PEM Chain":
+                    filedata = CVCertificatePEMUtil.encodeCertificateChainToPEM(currentChain).getBytes(StandardCharsets.UTF_8);
+                    break;
             }
-        });
-    }
+            if (filedata != null) {
+                int confirmDialog = JOptionPane.YES_OPTION;
+                if (file.exists()) {
+                    confirmDialog = JOptionPane.showConfirmDialog(this, "File already exists!\nDo you want to overwrite the existing certificate file?", "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                }
+                if (confirmDialog == JOptionPane.YES_OPTION) {
+                    Files.write(file.toPath(), filedata);
+                    JOptionPane.showMessageDialog(this, "Certificate saved successfully");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to save certificate. Content is empty");
+            }
+
+        } catch (CVBaseException | IOException ex) {
+            ErrorDialogUtil.showError(this,
+                    "Failed to save certificate:\n" + ex.getMessage(),
+                    "File Not Saved!");
+        }
+    }//GEN-LAST:event_copyToFileButtonActionPerformed
 
     /**
      * @deprecated @return
@@ -674,30 +983,5 @@ public class CVCViewer extends javax.swing.JFrame {
     public ImageIcon getCertificateIcon() {
         return new ImageIcon(new ImageIcon("icon.png").getImage().getScaledInstance(label_certIcon.getWidth(), label_certIcon.getHeight(), Image.SCALE_DEFAULT));
     }
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btn_ok;
-    private javax.swing.JTable detail_table;
-    private javax.swing.JLabel general_caReference;
-    private javax.swing.JLabel general_holderRefernce;
-    private javax.swing.JLabel general_labelTO;
-    private javax.swing.JLabel general_purposeLable;
-    private javax.swing.JLabel general_validFrom;
-    private javax.swing.JLabel general_validFromLabel;
-    private javax.swing.JLabel general_validTo;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLayeredPane jLayeredPane1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JTabbedPane jTabbedPane3;
-    private javax.swing.JLabel label_certIcon;
-    private javax.swing.JLabel label_generlPurpose;
-    private javax.swing.JTextArea selectedRowDetailTextArea;
-    private javax.swing.JTabbedPane tab_detail;
-    // End of variables declaration//GEN-END:variables
+
 }

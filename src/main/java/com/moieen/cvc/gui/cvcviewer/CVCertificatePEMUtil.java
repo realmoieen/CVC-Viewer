@@ -12,10 +12,12 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public final class CertificateParser {
+public final class CVCertificatePEMUtil {
 
     private static final String TYPE_CERTIFICATE = "CERTIFICATE";
     private static final String TYPE_CV_CERTIFICATE = "CV CERTIFICATE";
@@ -50,10 +52,49 @@ public final class CertificateParser {
                     Pattern.DOTALL
             );
 
-    private CertificateParser() {
+    private CVCertificatePEMUtil() {
         // Utility class
     }
 
+    public static String encodeCertificateChainToPEM(List<CVCertificate> certificateList) throws CVBaseException {
+        StringJoiner joiner = new StringJoiner("\r\n");
+        for (CVCertificate cvCertificate : certificateList) {
+            String s = encodeCertificateToPEM(cvCertificate);
+            joiner.add(s);
+        }
+        return joiner.toString();
+    }
+    public static String encodeCertificateToPEM(CVCertificate certificate) throws CVBaseException{
+        String b64encoded = certificate.generateCert().getB64encoded(64);
+        String header = TYPE_CERTIFICATE;
+        if (certificate.isReqCert()) {
+            if (certificate.hasOuterSignature()) {
+                header = TYPE_CV_AUTHENTICATED_REQUEST;
+            } else {
+                header = TYPE_CV_REQUEST;
+            }
+        } else {
+            header = TYPE_CV_CERTIFICATE;
+        }
+        return "-----BEGIN " + header + "-----\r\n" + b64encoded + "\r\n-----END " + header + "-----";
+    }
+
+    public static String encodeCertificateToBase64(CVCertificate certificate) throws CVBaseException{
+        return certificate.generateCert().getB64encoded();
+    }
+
+    public static String encodeCertificateChainToBase64(List<CVCertificate> certificateList) throws CVBaseException{
+        StringJoiner joiner = new StringJoiner(",");
+        for (CVCertificate cvCertificate : certificateList) {
+            String s = encodeCertificateToBase64(cvCertificate);
+            joiner.add(s);
+        }
+        return joiner.toString();
+    }
+
+    public static byte[] encodeCertificateToDer(CVCertificate certificate) throws CVBaseException {
+        return certificate.generateCert().toByteArray();
+    }
 
     /**
      * Loads one or more CV Certificates from file.
@@ -63,10 +104,10 @@ public final class CertificateParser {
         byte[] fileBytes = Files.readAllBytes(certificateFile.toPath());
 
         // Attempt text-based parsing first
-        String content = new String(fileBytes, StandardCharsets.US_ASCII).trim();
+        String content = new String(fileBytes, StandardCharsets.US_ASCII).trim().replaceAll("\r","").replaceAll("\n","");
 
         // 1️⃣ PEM with headers (single or multiple)
-        if (content.startsWith("-----BEGIN")) {
+        if (content.contains("-----BEGIN")) {
             List<DataBuffer> dataBuffers = parsePemCertificates(content);
             List<CVCertificate> list = new ArrayList<>();
             for (DataBuffer dataBuffer : dataBuffers) {
