@@ -54,7 +54,7 @@ jobs:
             **/build/test-results/
 
       - name: Upload Release to Artifact
-        uses: actions/download-artifact@v4
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: Releases
