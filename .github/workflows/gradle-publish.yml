@@ -59,8 +59,8 @@ jobs:
         with:
           name: Releases
           path: |
-            build/libs/*.jar
-            build/distributions/*.zip
+            **/build/libs/*.jar
+            **/build/distributions/*.zip
 
       - name: Publish Test Results
         uses: mikepenz/action-junit-report@v4
