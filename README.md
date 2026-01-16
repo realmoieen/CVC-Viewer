@@ -1,5 +1,7 @@
 [![Build and Release](https://github.com/realmoieen/CVC-Viewer/actions/workflows/gradle-publish.yml/badge.svg?event=release)](https://github.com/realmoieen/CVC-Viewer/actions/workflows/gradle-publish.yml)
-# CVC-Viewer 
+
+# CVC-Viewer
+
 ![](./icons/cvc-logo.png)
 
 **Author:** Moieen Abbas
@@ -40,6 +42,7 @@ This tool provides a **human-readable view** of CV Certificates without assuming
 * Supports **single certificates** and **certificate chains**
 
 ---
+
 ## How to Use CVC-Viewer
 
 ### Windows Environment
@@ -78,7 +81,7 @@ The certificate details will be displayed in the viewer.
 
 ### Linux & macOS Environment
 
-For Linux and macOS, use the **executable JAR** provided in GitHub Releases. 
+For Linux and macOS, use the **executable JAR** provided in GitHub Releases.
 
 ⚠️ This application required Graphical Environment to run, headless is not supported.
 
@@ -109,36 +112,26 @@ This will launch the viewer and **directly load the specified CV certificate**.
 
 ---
 
-## Windows Integration (Context Menu Support)
+### Windows Integration (Context Menu and File Extension Association Support)
 
-The **Windows ZIP distribution** contains an additional registry file:
+The **Windows ZIP distribution** contains an additional `install.bat` file:
 
-```
-CVC_Registry.reg
-```
+Run the `install.bat` file to automatically register the CVC Viewer executable in Windows.
+which performs following task:
 
-This registry file **adds CVC-Viewer to the Windows right-click context menu**, allowing you to open CV certificates directly by right-clicking on a file.
+* Adds CVC-Viewer to the Windows right-click context menu `Open in CVC Viewer`
+* Register the CVC Viewer for files with extension `.cvreq` and `.cvcert`
 
 ### Important Notes ⚠️
 
-* The registry entry creates a **direct link to the CVC-Viewer EXE file**
-* **Do NOT move or rename the EXE after applying the registry**
+* The installation creates a **direct link to the CVC-Viewer EXE file**
+* **Do NOT move or rename the EXE after installation**
 
-    * Doing so will **break the context-menu link**
-* If you move the EXE, you must **re-apply the registry file**
+    * Doing so will **break the context-menu link** and **file extension association**
+* If you move the EXE, you must **re-install using `install.bat`**
 
-### How to Register the Context Menu
-
-1. Extract the Windows ZIP file
-2. Ensure the EXE file is placed in its **final location**
-3. Double-click:
-
-   ```
-   CVC_Registry.reg
-   ```
-4. Confirm the Windows registry security dialog
-
-After registration, you can right-click a CV certificate file and open it directly using **CVC-Viewer**.
+After installation, you can right-click a CV certificate file and open it directly using **CVC-Viewer** or directly
+double click `.cvreq` and `.cvcert` file.
 
 ---
 
@@ -224,7 +217,10 @@ CVC-Viewer supports the following real-world scenarios:
 ```bash
 git clone https://github.com/realmoieen/CVC-Viewer.git
 cd CVC-Viewer
-./mvnw install
+#To create only exe file 
+./gradlew clean createExe 
+#To create release for windows 
+./gradlew clean windowsZip
 ```
 
 ---

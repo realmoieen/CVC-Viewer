@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.moieen.cvc.gui'
-version = '2.0'
+version = '3.0'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -85,7 +85,7 @@ tasks.register('prepareWindowsZip') {
     doLast {
         copy {
             from(projectDir) {
-                include "CVC_Registry.reg"
+                include "install.bat"
                 filter { line ->
                     line.replaceAll("%VERSION%", project.version.toString())
                 }
@@ -99,6 +99,7 @@ tasks.register('prepareWindowsZip') {
             // Optional: include README / license
             from(projectDir) {
                 include 'icons/*.png'
+                include 'icons/*.ico'
                 include 'README.md'
                 include 'LICENSE'
             }
