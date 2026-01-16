@@ -15,7 +15,7 @@ import java.util.Objects;
  * @version 1.0
  */
 public class Lunch {
-
+    public static String APP_VERSION="2.0";
     /**
      * Main function.
      *

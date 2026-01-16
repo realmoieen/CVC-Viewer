@@ -2,6 +2,7 @@ package com.moieen.cvc.gui.cvcviewer;
 
 import com.moieen.cvc.gui.cvcviewer.path.CvcTreeBuilder;
 import com.moieen.cvc.gui.cvcviewer.path.CvcTreeNode;
+import com.moieen.cvc.gui.cvcviewer.update.UpdateChecker;
 import de.bsi.testbedutils.cvc.cvcertificate.*;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVBaseException;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVInvalidKeySourceException;
@@ -37,7 +38,7 @@ import java.util.Map;
  * @author Moieen Abbas
  */
 public class CVCViewer extends JFrame {
-
+    private static boolean isUpdatedChecked = false;
     private DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
     private Map<String, String> map_tableData = new LinkedHashMap<>();
     private List<CVCertificate> currentChain;   // leaf → root
@@ -86,10 +87,21 @@ public class CVCViewer extends JFrame {
         init();
         this.setDefaultCloseOperation(defaultCloseOperation);
         setLocationRelativeTo(null);
+        CVCViewer cvcViewer = this;
         try {
             setCertificateDetail(list_cvcerts);
+            if (!isUpdatedChecked) {
+                new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        UpdateChecker.checkForUpdate(cvcViewer);
+                        isUpdatedChecked = true;
+                        return null;
+                    }
+                }.execute();
+            }
         } catch (Exception e) {
-            ErrorDialogUtil.showError(this,e);
+            ErrorDialogUtil.showError(this, e);
             System.exit(0);
         }
     }
@@ -120,7 +132,7 @@ public class CVCViewer extends JFrame {
     }
 
     private void init() {
-        this.setTitle("CV Certificate Viewer");
+        this.setTitle("CV Certificate Viewer - "+Lunch.APP_VERSION);
         this.setResizable(false);
         this.setIconImage(new ImageIcon(getClass().getResource("/images/cvc-logo.png")).getImage());
         initComponents();
