@@ -98,6 +98,7 @@ tasks.register('prepareWindowsZip') {
 
             // Optional: include README / license
             from(projectDir) {
+                include 'icons/*.png'
                 include 'README.md'
                 include 'LICENSE'
             }
