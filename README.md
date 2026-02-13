@@ -1,4 +1,5 @@
 [![Build and Release](https://github.com/realmoieen/CVC-Viewer/actions/workflows/gradle-publish.yml/badge.svg?event=release)](https://github.com/realmoieen/CVC-Viewer/actions/workflows/gradle-publish.yml)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/realmoieen/CVC-Viewer/total?label=Total%20Downloads&link=https%3A%2F%2Fgithub.com%2Frealmoieen%2FCVC-Viewer%2Freleases)
 
 # CVC-Viewer
 
