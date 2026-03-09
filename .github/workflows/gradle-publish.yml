@@ -19,7 +19,7 @@ on:
 
 jobs:
   build-win:
-    runs-on: windows-latest
+    runs-on: [windows-latest , macos-latest, ubuntu-latest]
     permissions:
       contents: write
       packages: write
@@ -31,7 +31,7 @@ jobs:
       - name: Check out source code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 8
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -41,8 +41,18 @@ jobs:
             *.gradle*
             **/gradle-wrapper.properties
 
+      - name: Install WiX (Windows only)
+        if: runner.os == 'Windows'
+        run: choco install wixtoolset -y
+
+      - name: Install Linux packaging tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm
+
       - name: Gradle Build started
-        run: ./gradlew clean windowsZip --no-daemon
+        run: ./gradlew clean jpackageNative --no-daemon
 
       - name: Store reports
         if: failure()
@@ -60,12 +70,12 @@ jobs:
           name: Releases
           path: |
             **/build/libs/*.jar
-            **/build/distributions/*.zip
+            **/build/installer/*
 
       - name: Publish Test Results
         uses: mikepenz/action-junit-report@v4
         with:
-          check_name: "Junit Windows Test Report"
+          check_name: "Junit Test Report"
           report_paths: '**/build/test-results/test/TEST-*.xml'
 
         # upload to release to tag
@@ -76,7 +86,7 @@ jobs:
         with:
           files: |
             build/libs/*.jar
-            build/distributions/*.zip
+            build/installer/*
         env:
           USERNAME: ${{ github.actor }}
           TOKEN: ${{ secrets.GITHUB_TOKEN }}

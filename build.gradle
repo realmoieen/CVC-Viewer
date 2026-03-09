@@ -2,13 +2,23 @@ plugins {
     id 'java'
     id 'application'
     id("com.gradleup.shadow") version "9.3.1"
-    id 'edu.sc.seis.launch4j' version '4.0.0'
+//    id 'edu.sc.seis.launch4j' version '4.0.0'
 }
 
-group = 'com.moieen.cvc.gui'
-version = '3.0'
+def windowsZipDir = layout.buildDirectory.dir("windowsZip")
+def buildTime = new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+def buildUser = System.getProperty("user.name")
+def buildJdk = System.getProperty("java.version")
+def buildVendor = System.getProperty("java.vendor")
+def buildOs = "${System.getProperty("os.name")} ${System.getProperty("os.arch")} ${System.getProperty("os.version")}"
+
+group = 'io.github.realmoieen.cvcviewer'
+version = '3.1'
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
@@ -19,13 +29,25 @@ application {
 
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://jitpack.io/'
+    }
+}
+
+configurations.all {
+    exclude group: "org.apache.logging.log4j", module: "log4j-core"
 }
 
 dependencies {
     // System-scope dependencies (local JARs)
-    implementation files('lib/testbedutils-CVC-1.3.jar')
-    implementation files('lib/bcprov-jdk18on-1.78.1.jar')
+    implementation('com.github.realmoieen.common-testbed-utilities:testbedutils-CVC:v1.4-rc1') {
+        exclude(group: "org.bouncycastle", module: "bcutil-jdk18on")
+        exclude(group: "org.bouncycastle", module: "bcpkix-jdk18on")
+        exclude(group: "org.bouncycastle", module: "bctls-jdk18on")
+        exclude(group: "org.apache.logging.log4j", module: "log4j-core")
+    }
     implementation 'org.json:json:20240303'
+//    implementation 'com.github.Keyfactor:ejbca-cert-cvc:v1.6.1'
     // Regular dependency
     implementation 'org.jdesktop:beansbinding:1.2.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
@@ -37,91 +59,266 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
 
 }
+
 tasks.named("test") {
     useJUnitPlatform()
     testLogging {
         events "passed", "skipped", "failed"
     }
 }
+
 jar {
     archiveBaseName = project.name
+
     manifest {
         attributes(
-                'Main-Class': 'com.moieen.cvc.gui.cvcviewer.Lunch'
+                // Standard
+                'Manifest-Version': '1.0',
+                'Created-By': "Gradle ${gradle.gradleVersion}",
+
+                // Main class
+                'Main-Class': 'io.github.realmoieen.cvcviewer.Lunch',
+
+                // Specification
+                'Specification-Title': project.name,
+                'Specification-Version': project.version,
+                'Specification-Vendor': 'io.github.realmoieen',
+
+                // Implementation
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'io.github.realmoieen',
+                'Implementation-Vendor-Id': 'io.github.realmoieen',
+
+                // Build Information
+                'Built-By': buildUser,
+                'Build-Time': buildTime,
+                'Build-Jdk': buildJdk,
+                'Build-Jdk-Vendor': buildVendor,
+                'Build-OS': buildOs,
+                'Gradle-Version': gradle.gradleVersion,
+
+                // Project Info
+                'Project-Name': project.name,
+                'Project-Version': project.version,
+                'Project-URL': 'https://github.com/realmoieen/CVC-Viewer',
+
+                // Java Module (optional but recommended)
+                'Automatic-Module-Name': 'io.github.realmoieen'
         )
     }
 }
-shadowJar {
-    archiveFileName = "${project.name}-${project.version}.jar"
-}
-launch4j {
-    mainClassName = 'com.moieen.cvc.gui.cvcviewer.Lunch'
-    icon = "${project.rootDir}/icons/cvc-logo.ico"
-    classpath = []
-    jarTask = project.tasks.shadowJar
-    errTitle = "Error CVC-Viewer"
-    version = project.version
-    textVersion = "$project.version"
-    description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
-    copyright = "Copyright (c) 2026 - Moieen Abbas"
-    companyName = "Moieen Abbas - https://github.com/realmoieen"
-    jreMinVersion = '1.8.0_131'
-    supportUrl = "https://github.com/realmoieen/CVC-Viewer/issues"
-    outfile="${project.name}-${project.version}.exe"
-}
-createExe{
-    dependsOn test
-}
+
 // Encoding configuration
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
-def windowsZipDir = layout.buildDirectory.dir("windowsZip")
 
-tasks.register('prepareWindowsZip') {
-    group = 'distribution'
-    dependsOn 'createExe'   // your launch4j task
+shadowJar {
+    archiveFileName = "${project.name}-${project.version}.jar"
+}
 
+//launch4j {
+//    mainClassName = 'com.moieen.cvc.gui.cvcviewer.Lunch'
+//    icon = "${project.rootDir}/icons/cvc-logo.ico"
+//    classpath = []
+//    jarTask = project.tasks.shadowJar
+//    errTitle = "Error CVC-Viewer"
+//    version = project.version
+//    textVersion = "$project.version"
+//    description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
+//    copyright = "Copyright (c) 2026 - Moieen Abbas"
+//    companyName = "Moieen Abbas - https://github.com/realmoieen"
+//    jreMinVersion = '1.8.0_131'
+//    supportUrl = "https://github.com/realmoieen/CVC-Viewer/issues"
+//    outfile="${project.name}-${project.version}.exe"
+//}
+//createExe{
+//    dependsOn test
+//}
+
+//tasks.register('prepareWindowsZip') {
+//    group = 'distribution'
+//    dependsOn 'createExe'   // your launch4j task
+//
+//    doLast {
+//        copy {
+//            from(projectDir) {
+//                include "install.bat"
+//                filter { line ->
+//                    line.replaceAll("%VERSION%", project.version.toString())
+//                }
+//            }
+//
+//            // Include EXE
+//            from(layout.buildDirectory.dir('launch4j')) {
+//                include "*.exe"
+//            }
+//
+//            // Optional: include README / license
+//            from(projectDir) {
+//                include 'icons/*.png'
+//                include 'icons/*.ico'
+//                include 'README.md'
+//                include 'LICENSE'
+//            }
+//
+//            into windowsZipDir.get().asFile
+//        }
+//    }
+//}
+
+//tasks.register('windowsZip', Zip) {
+//    group = 'distribution'
+//    description = 'Packages Launch4j EXE and files into a Windows ZIP'
+//
+//    // Ensure EXE is created first
+//    dependsOn prepareWindowsZip
+//
+//    // ZIP name: *-windows.zip
+//    archiveBaseName = "${project.name}"
+//    archiveClassifier = 'windows'
+//    archiveExtension = 'zip'
+//
+//    destinationDirectory = layout.buildDirectory.dir('distributions')
+//
+//    from windowsZipDir
+//}
+
+def appName = "CVC-Viewer"
+def mainClassName = "com.moieen.cvc.gui.cvcviewer.Lunch"
+def windowsLogo = "${projectDir}/icons/cvc-logo.ico"
+def macLogo = "${projectDir}/icons/cvc-logo.icns"
+def vendor = "Moieen Abbas"
+def description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
+def copyright = "Open-source software"
+def uuid="62d77761-3da1-4efc-a865-0cafa56aef7d"
+def outputDir = layout.buildDirectory.dir("installer").get().asFile
+
+tasks.register("verifyWix") {
+    group 'jpackage'
     doLast {
-        copy {
-            from(projectDir) {
-                include "install.bat"
-                filter { line ->
-                    line.replaceAll("%VERSION%", project.version.toString())
-                }
-            }
-
-            // Include EXE
-            from(layout.buildDirectory.dir('launch4j')) {
-                include "*.exe"
-            }
-
-            // Optional: include README / license
-            from(projectDir) {
-                include 'icons/*.png'
-                include 'icons/*.ico'
-                include 'README.md'
-                include 'LICENSE'
-            }
-
-            into windowsZipDir.get().asFile
+        def candle = "candle".execute()
+        if (candle.waitFor() != 0) {
+            throw new GradleException("WiX Toolset not found in PATH")
         }
     }
 }
 
-tasks.register('windowsZip', Zip) {
-    group = 'distribution'
-    description = 'Packages Launch4j EXE and files into a Windows ZIP'
+tasks.register("jpackageWindows", Exec) {
+    dependsOn verifyWix, shadowJar
+    group 'jpackage'
 
-    // Ensure EXE is created first
-    dependsOn prepareWindowsZip
+    doFirst {
+        outputDir.mkdirs()
+    }
 
-    // ZIP name: *-windows.zip
-    archiveBaseName = "${project.name}"
-    archiveClassifier = 'windows'
-    archiveExtension = 'zip'
+    commandLine = [
+            "${javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(17)
+            }.get().metadata.installationPath}/bin/jpackage",
 
-    destinationDirectory = layout.buildDirectory.dir('distributions')
+            "--type", "msi", // or msi
+            "--name", appName,
+            "--input", shadowJar.archiveFile.get().asFile.parent,
+            "--main-jar", shadowJar.archiveFile.get().asFile.name,
+            "--main-class", mainClassName,
+            "--dest", outputDir,
+            "--app-version", project.version,
+            "--icon", windowsLogo,
+            "--win-menu",
+            "--win-shortcut",
+            "--win-dir-chooser",
+            "--win-shortcut-prompt",
+            "--win-per-user-install",
+            "--win-menu-group","CVC-Viewer",
+            "--win-upgrade-uuid", uuid,
+            "--vendor", vendor,
+            "--description", description,
+            "--copyright", copyright,
+            "--about-url", "https://github.com/realmoieen/CVC-Viewer",
+            "--file-associations", "${projectDir}/packaging/cvcert.properties",
+            "--file-associations", "${projectDir}/packaging/cvreq.properties",
+            "--java-options", "-Dfile.encoding=UTF-8",
+            "--verbose"
+    ]
+}
 
-    from windowsZipDir
+tasks.register("jpackageMac", Exec) {
+    dependsOn shadowJar
+    group 'jpackage'
+
+    commandLine = [
+            "${javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(17)
+            }.get().metadata.installationPath}/bin/jpackage",
+
+            "--type", "dmg", // or msi
+            "--name", appName,
+            "--input", shadowJar.archiveFile.get().asFile.parent,
+            "--main-jar", shadowJar.archiveFile.get().asFile.name,
+            "--main-class", mainClassName,
+            "--dest", outputDir,
+            "--app-version", project.version,
+            "--mac-package-name",
+            "--mac-package-identifier",
+            "--icon", macLogo,
+            "--vendor", vendor,
+            "--description", description,
+            "--copyright", copyright,
+            "--about-url", "https://github.com/realmoieen/CVC-Viewer",
+            "--file-associations", "${projectDir}/packaging/cvcert.properties",
+            "--file-associations", "${projectDir}/packaging/cvreq.properties",
+            "--verbose"
+    ]
+}
+
+tasks.register("jpackageLinux", Exec) {
+    dependsOn shadowJar
+    group 'jpackage'
+
+    commandLine = [
+            "${javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(17)
+            }.get().metadata.installationPath}/bin/jpackage",
+
+            "--type", "deb",
+            "--name", appName,
+            "--input", shadowJar.archiveFile.get().asFile.parent,
+            "--main-jar", shadowJar.archiveFile.get().asFile.name,
+            "--main-class", mainClassName,
+            "--dest", outputDir,
+            "--app-version", project.version,
+            "--icon", "${projectDir}/icons/cvc-logo.png",
+            "--linux-app-category","Utility",
+            "--linux-menu-group", "Utilities",
+            "--linux-shortcut",
+
+            "--vendor", vendor,
+            "--description", description,
+            "--copyright", copyright,
+
+            "--file-associations", "${projectDir}/packaging/cvcert.properties",
+            "--file-associations", "${projectDir}/packaging/cvreq.properties",
+
+            "--verbose"
+    ]
+}
+
+import org.gradle.internal.os.OperatingSystem
+
+tasks.register("jpackageNative") {
+    group = "jpackage"
+
+    def os = OperatingSystem.current()
+
+    if (os.isWindows()) {
+        dependsOn jpackageWindows
+    }
+    else if (os.isMacOsX()) {
+        dependsOn jpackageMac
+    }
+    else if (os.isLinux()) {
+        dependsOn jpackageLinux
+    }
 }
