@@ -39,7 +39,7 @@ jobs:
         run: choco install wixtoolset -y
 
       - name: Gradle Build started
-        run: ./gradlew clean jpackageWindows --no-daemon
+        run: ./gradlew clean test jpackageWindows --no-daemon
 
       - name: Store reports
         if: failure()

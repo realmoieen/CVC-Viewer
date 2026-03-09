@@ -50,7 +50,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Gradle Build started
-        run: ./gradlew clean jpackageNative --no-daemon
+        run: ./gradlew clean test jpackageNative --no-daemon
 
       - name: Store reports
         if: failure()

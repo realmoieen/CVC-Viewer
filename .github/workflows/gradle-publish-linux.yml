@@ -44,7 +44,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Gradle Build started
-        run: ./gradlew clean jpackageLinux --no-daemon
+        run: ./gradlew clean test jpackageLinux --no-daemon
 
       - name: Store reports
         if: failure()
