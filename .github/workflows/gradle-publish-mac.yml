@@ -12,7 +12,7 @@ on:
   workflow_call:
 
 jobs:
-  build-win:
+  build-mac:
     runs-on: macos-latest
     permissions:
       contents: write
@@ -35,24 +35,14 @@ jobs:
             *.gradle*
             **/gradle-wrapper.properties
 
-      - name: Install WiX (Windows only)
-        if: runner.os == 'Windows'
-        run: choco install wixtoolset -y
-
-      - name: Install Linux packaging tools
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fakeroot rpm
-
       - name: Gradle Build started
-        run: ./gradlew clean jpackageNative --no-daemon
+        run: ./gradlew clean jpackageMac --no-daemon
 
       - name: Store reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports-window
+          name: test-reports-mac
           path: |
             **/build/reports/
             **/build/test-results/

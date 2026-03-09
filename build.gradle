@@ -206,7 +206,7 @@ tasks.register("verifyWix") {
 }
 
 tasks.register("jpackageWindows", Exec) {
-    dependsOn verifyWix, shadowJar
+    dependsOn shadowJar
     group 'jpackage'
 
     doFirst {

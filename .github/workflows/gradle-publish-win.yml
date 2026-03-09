@@ -35,18 +35,11 @@ jobs:
             *.gradle*
             **/gradle-wrapper.properties
 
-      - name: Install WiX (Windows only)
-        if: runner.os == 'Windows'
+      - name: Install WiX
         run: choco install wixtoolset -y
 
-      - name: Install Linux packaging tools
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fakeroot rpm
-
       - name: Gradle Build started
-        run: ./gradlew clean jpackageNative --no-daemon
+        run: ./gradlew clean jpackageWindows --no-daemon
 
       - name: Store reports
         if: failure()
