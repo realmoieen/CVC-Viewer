@@ -40,6 +40,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y fakeroot rpm
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
       - name: Gradle Build started
         run: ./gradlew clean jpackageLinux --no-daemon
 

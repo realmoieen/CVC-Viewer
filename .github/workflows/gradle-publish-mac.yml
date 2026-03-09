@@ -35,6 +35,9 @@ jobs:
             *.gradle*
             **/gradle-wrapper.properties
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
       - name: Gradle Build started
         run: ./gradlew clean jpackageMac --no-daemon
 

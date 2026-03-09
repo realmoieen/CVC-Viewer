@@ -45,6 +45,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y fakeroot rpm
 
+      - name: Make gradlew executable
+        if: runner.os != 'Windows'
+        run: chmod +x gradlew
+
       - name: Gradle Build started
         run: ./gradlew clean jpackageNative --no-daemon
 
