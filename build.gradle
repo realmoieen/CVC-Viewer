@@ -189,6 +189,7 @@ def appName = "CVC-Viewer"
 def mainClassName = "com.moieen.cvc.gui.cvcviewer.Lunch"
 def windowsLogo = "${projectDir}/icons/cvc-logo.ico"
 def macLogo = "${projectDir}/icons/cvc-logo.icns"
+def linuxLogo = "${projectDir}/icons/cvc-logo.png"
 def vendor = "Moieen Abbas"
 def description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
 def copyright = "Open-source software"
@@ -298,8 +299,8 @@ tasks.register("jpackageLinux", Exec) {
             "--description", description,
             "--copyright", copyright,
 
-            "--file-associations", "${projectDir}/packaging/cvcert.properties",
-            "--file-associations", "${projectDir}/packaging/cvreq.properties",
+            "--file-associations", "${projectDir}/packaging/cvcert-linux.properties",
+            "--file-associations", "${projectDir}/packaging/cvreq-linux.properties",
 
             "--verbose"
     ]
