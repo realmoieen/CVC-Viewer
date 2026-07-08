@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'application'
     id("com.gradleup.shadow") version "9.3.1"
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 //    id 'edu.sc.seis.launch4j' version '4.0.0'
 }
 
@@ -26,14 +27,19 @@ version = '3.1'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(25)
     }
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 application {
     mainClass = mainClassName
+}
+
+javafx {
+    version = "25"
+    modules = ['javafx.controls', 'javafx.fxml']
 }
 
 repositories {
@@ -59,6 +65,7 @@ dependencies {
 //    implementation 'com.github.Keyfactor:ejbca-cert-cvc:v1.6.1'
     // Regular dependency
     implementation 'org.jdesktop:beansbinding:1.2.1'
+    implementation 'io.github.mkpaz:atlantafx-base:2.1.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     // JUnit 5 API + Engine
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
