@@ -11,7 +11,16 @@ def buildUser = System.getProperty("user.name")
 def buildJdk = System.getProperty("java.version")
 def buildVendor = System.getProperty("java.vendor")
 def buildOs = "${System.getProperty("os.name")} ${System.getProperty("os.arch")} ${System.getProperty("os.version")}"
-
+def appName = "CVC-Viewer"
+def mainClassName = "io.github.realmoieen.cvcviewer.Lunch"
+def windowsLogo = "${projectDir}/icons/cvc-logo.ico"
+def macLogo = "${projectDir}/icons/cvc-logo.icns"
+def linuxLogo = "${projectDir}/icons/cvc-logo.png"
+def vendor = "Moieen Abbas"
+def description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
+def copyright = "Open-source software"
+def uuid="62d77761-3da1-4efc-a865-0cafa56aef7d"
+def outputDir = layout.buildDirectory.dir("installer").get().asFile
 group = 'io.github.realmoieen.cvcviewer'
 version = '3.1'
 
@@ -24,7 +33,7 @@ java {
 }
 
 application {
-    mainClass = 'com.moieen.cvc.gui.cvcviewer.Lunch'
+    mainClass = mainClassName
 }
 
 repositories {
@@ -77,7 +86,7 @@ jar {
                 'Created-By': "Gradle ${gradle.gradleVersion}",
 
                 // Main class
-                'Main-Class': 'io.github.realmoieen.cvcviewer.Lunch',
+                'Main-Class': mainClassName,
 
                 // Specification
                 'Specification-Title': project.name,
@@ -185,17 +194,6 @@ shadowJar {
 //    from windowsZipDir
 //}
 
-def appName = "CVC-Viewer"
-def mainClassName = "com.moieen.cvc.gui.cvcviewer.Lunch"
-def windowsLogo = "${projectDir}/icons/cvc-logo.ico"
-def macLogo = "${projectDir}/icons/cvc-logo.icns"
-def linuxLogo = "${projectDir}/icons/cvc-logo.png"
-def vendor = "Moieen Abbas"
-def description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
-def copyright = "Open-source software"
-def uuid="62d77761-3da1-4efc-a865-0cafa56aef7d"
-def outputDir = layout.buildDirectory.dir("installer").get().asFile
-
 tasks.register("verifyWix") {
     group 'jpackage'
     doLast {
@@ -290,7 +288,7 @@ tasks.register("jpackageLinux", Exec) {
             "--main-class", mainClassName,
             "--dest", outputDir,
             "--app-version", project.version,
-            "--icon", "${projectDir}/icons/cvc-logo.png",
+            "--icon", linuxLogo,
             "--linux-app-category","Utility",
             "--linux-menu-group", "Utilities",
             "--linux-shortcut",
