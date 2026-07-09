@@ -20,9 +20,11 @@ public final class ExtensionFormatter {
                 } else {
                     out.append(cvExtensionData.getType().name()).append(":\n");
                 }
-                out.append(cvExtensionData.getHash1().getHexSplit(":", "\t", 48));
+                out.append("\tHash 1:\n")
+                        .append(cvExtensionData.getHash1().getHexSplit(":", "\t\t", 48));
                 if (cvExtensionData.getHash2() != null) {
-                    out.append(cvExtensionData.getHash2().getHexSplit(":", "\t", 48));
+                    out.append("\tHash 2:\n")
+                            .append(cvExtensionData.getHash2().getHexSplit(":", "\t\t", 48));
                 }
             }
         }
