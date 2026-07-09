@@ -45,12 +45,14 @@ public final class CertificateFileService {
         return CVCertificatePEMUtil.loadCVCertificate(file);
     }
 
-    public File chooseSaveFile(Window owner, CVCertificate certificate) {
+    public File chooseSaveFile(Window owner, CVCertificate certificate, SaveFormat saveFormat) {
+        String extension = certificate.isReqCert() ? ".cvreq" : ".cvcert";
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save Certificate");
         chooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        chooser.getExtensionFilters().add(new  FileChooser.ExtensionFilter(saveFormat.label(), extension));
         String fileName = certificate.getCertHolderRef() != null ? certificate.getCertHolderRef() : "certificate";
-        fileName = fileName + (certificate.isReqCert() ? ".cvreq" : ".cvcert");
+        fileName = fileName + extension;
         chooser.setInitialFileName(fileName);
         return chooser.showSaveDialog(owner);
     }

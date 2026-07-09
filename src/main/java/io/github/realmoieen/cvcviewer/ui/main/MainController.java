@@ -4,11 +4,16 @@ import de.bsi.testbedutils.cvc.cvcertificate.exception.CVBaseException;
 import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 import io.github.realmoieen.cvcviewer.info.AppInfo;
 import io.github.realmoieen.cvcviewer.service.file.CertificateFileService;
+import io.github.realmoieen.cvcviewer.service.settings.AppSettings;
+import io.github.realmoieen.cvcviewer.service.settings.SettingsService;
+import io.github.realmoieen.cvcviewer.service.settings.ThemePreference;
+import io.github.realmoieen.cvcviewer.service.update.UpdateNotifier;
 import io.github.realmoieen.cvcviewer.ui.about.AboutController;
 import io.github.realmoieen.cvcviewer.ui.common.AlertFactory;
 import io.github.realmoieen.cvcviewer.ui.common.AppIcons;
 import io.github.realmoieen.cvcviewer.ui.detail.DetailController;
 import io.github.realmoieen.cvcviewer.ui.path.PathController;
+import io.github.realmoieen.cvcviewer.ui.theme.ThemeManager;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -17,6 +22,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
 import javafx.scene.image.Image;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
@@ -38,7 +44,15 @@ public class MainController {
     @FXML
     private MenuItem saveAsMenuItem;
     @FXML
+    private MenuItem checkForUpdatesMenuItem;
+    @FXML
     private MenuItem aboutMenuItem;
+    @FXML
+    private RadioMenuItem lightThemeMenuItem;
+    @FXML
+    private RadioMenuItem darkThemeMenuItem;
+    @FXML
+    private RadioMenuItem systemThemeMenuItem;
 
     @FXML
     private GeneralController generalViewController;
@@ -61,6 +75,8 @@ public class MainController {
         openMenuItem.setOnAction(e -> onOpen());
         saveAsMenuItem.setOnAction(e -> onSaveAs());
         aboutMenuItem.setOnAction(e -> onAbout());
+        checkForUpdatesMenuItem.setOnAction(e -> UpdateNotifier.checkForUpdateManually(hostServices));
+        initThemeMenu();
 
         pathViewController.setOnViewCertificate(this::openSubChainWindow);
 
@@ -83,6 +99,26 @@ public class MainController {
         stage.getIcons().setAll(new Image(
                 getClass().getResourceAsStream(generalViewController.isValid(currentCertificate)
                         ? "/images/cvc-valid.png" : "/images/cvc-warning.png")));
+    }
+
+    private void initThemeMenu() {
+        ThemePreference current = SettingsService.load().getTheme();
+        switch (current) {
+            case LIGHT -> lightThemeMenuItem.setSelected(true);
+            case DARK -> darkThemeMenuItem.setSelected(true);
+            case SYSTEM -> systemThemeMenuItem.setSelected(true);
+        }
+
+        lightThemeMenuItem.setOnAction(e -> onThemeSelected(ThemePreference.LIGHT));
+        darkThemeMenuItem.setOnAction(e -> onThemeSelected(ThemePreference.DARK));
+        systemThemeMenuItem.setOnAction(e -> onThemeSelected(ThemePreference.SYSTEM));
+    }
+
+    private void onThemeSelected(ThemePreference theme) {
+        AppSettings settings = SettingsService.load();
+        settings.setTheme(theme);
+        SettingsService.save(settings);
+        ThemeManager.apply(theme);
     }
 
     @FXML
@@ -116,7 +152,7 @@ public class MainController {
             return;
         }
 
-        File file = fileService.chooseSaveFile(stage, currentCertificate);
+        File file = fileService.chooseSaveFile(stage, currentCertificate,chosen.get());
         if (file == null) {
             return;
         }

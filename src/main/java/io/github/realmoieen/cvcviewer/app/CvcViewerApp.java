@@ -1,13 +1,14 @@
 package io.github.realmoieen.cvcviewer.app;
 
-import atlantafx.base.theme.PrimerLight;
 import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 import io.github.realmoieen.cvcviewer.log.LoggingBootstrap;
 import io.github.realmoieen.cvcviewer.service.file.CertificateFileService;
+import io.github.realmoieen.cvcviewer.service.settings.SettingsService;
 import io.github.realmoieen.cvcviewer.service.update.UpdateNotifier;
 import io.github.realmoieen.cvcviewer.ui.common.AlertFactory;
 import io.github.realmoieen.cvcviewer.ui.common.AppIcons;
 import io.github.realmoieen.cvcviewer.ui.main.MainController;
+import io.github.realmoieen.cvcviewer.ui.theme.ThemeManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -38,7 +39,7 @@ public class CvcViewerApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        ThemeManager.apply(SettingsService.load().getTheme());
         AppIcons.applyTo(primaryStage);
 
         List<CVCertificate> chain = loadInitialChain(primaryStage);

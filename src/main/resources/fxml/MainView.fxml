@@ -5,8 +5,10 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioMenuItem?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 
@@ -21,8 +23,26 @@
                         <MenuItem fx:id="saveAsMenuItem" mnemonicParsing="true" text="_Save As"/>
                     </items>
                 </Menu>
+                <Menu text="View">
+                    <items>
+                        <Menu text="Theme">
+                            <items>
+                                <RadioMenuItem fx:id="lightThemeMenuItem" mnemonicParsing="true" text="_Light">
+                                    <toggleGroup>
+                                        <ToggleGroup fx:id="themeToggleGroup"/>
+                                    </toggleGroup>
+                                </RadioMenuItem>
+                                <RadioMenuItem fx:id="darkThemeMenuItem" mnemonicParsing="true" text="_Dark"
+                                               toggleGroup="$themeToggleGroup"/>
+                                <RadioMenuItem fx:id="systemThemeMenuItem" mnemonicParsing="true" text="_System Default"
+                                               toggleGroup="$themeToggleGroup"/>
+                            </items>
+                        </Menu>
+                    </items>
+                </Menu>
                 <Menu text="Help">
                     <items>
+                        <MenuItem fx:id="checkForUpdatesMenuItem" mnemonicParsing="true" text="_Check for Updates..."/>
                         <MenuItem fx:id="aboutMenuItem" mnemonicParsing="true" text="_About"/>
                     </items>
                 </Menu>

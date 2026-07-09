@@ -30,7 +30,7 @@ public final class UpdateService {
 
         HttpResponse<String> response = CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            return Optional.empty();
+            throw new IOException("GitHub API returned HTTP " + response.statusCode());
         }
 
         JSONObject obj = new JSONObject(response.body());
