@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
@@ -12,12 +13,16 @@
         <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
     </padding>
 
-    <TableView fx:id="detailTable" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="fieldColumn" prefWidth="160.0" text="Field"/>
-            <TableColumn fx:id="valueColumn" prefWidth="380.0" text="Value"/>
-        </columns>
-    </TableView>
+    <SplitPane orientation="VERTICAL" VBox.vgrow="ALWAYS" dividerPositions="0.7">
+        <items>
+            <TableView fx:id="detailTable">
+                <columns>
+                    <TableColumn fx:id="fieldColumn" prefWidth="160.0" text="Field"/>
+                    <TableColumn fx:id="valueColumn" prefWidth="380.0" text="Value"/>
+                </columns>
+            </TableView>
 
-    <TextArea fx:id="selectedRowDetail" editable="false" prefRowCount="6" wrapText="true"/>
+            <TextArea fx:id="selectedRowDetail" editable="false" wrapText="true"/>
+        </items>
+    </SplitPane>
 </VBox>
