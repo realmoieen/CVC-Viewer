@@ -38,13 +38,13 @@ jobs:
       - name: Install Linux packaging tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y fakeroot rpm
+          sudo apt-get install -y fakeroot
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Gradle Build started
-        run: ./gradlew clean test jpackageLinux --no-daemon
+        run: ./gradlew clean test jpackageLinux portableLinux --no-daemon
 
       - name: Store reports
         if: failure()
@@ -59,17 +59,14 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Releases
+          name: release-linux
           path: |
             **/build/libs/*.jar
             **/build/installer/*
+            **/build/distributions/*
 
       - name: Publish Test Results
         uses: mikepenz/action-junit-report@v4
         with:
           check_name: "Junit Test Report"
           report_paths: '**/build/test-results/test/TEST-*.xml'
-
-        env:
-          USERNAME: ${{ github.actor }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}

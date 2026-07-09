@@ -39,13 +39,13 @@ jobs:
         run: chmod +x gradlew
 
       - name: Gradle Build started
-        run: ./gradlew clean test jpackageMac --no-daemon
+        run: ./gradlew clean test jpackageMac portableMac --no-daemon
 
       - name: Store reports
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: test-reports-mac
+          name: test-reports-macos
           path: |
             **/build/reports/
             **/build/test-results/
@@ -54,17 +54,14 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Releases
+          name: release-macos
           path: |
             **/build/libs/*.jar
             **/build/installer/*
+            **/build/distributions/*
 
       - name: Publish Test Results
         uses: mikepenz/action-junit-report@v4
         with:
           check_name: "Junit Test Report"
           report_paths: '**/build/test-results/test/TEST-*.xml'
-
-        env:
-          USERNAME: ${{ github.actor }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
