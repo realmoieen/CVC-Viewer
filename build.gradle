@@ -65,8 +65,6 @@ dependencies {
     }
     implementation 'org.json:json:20240303'
 //    implementation 'com.github.Keyfactor:ejbca-cert-cvc:v1.6.1'
-    // Regular dependency
-    implementation 'org.jdesktop:beansbinding:1.2.1'
     // Pinned to 2.0.1 rather than latest 2.1.0: 2.1.0 compiles to Java 21 bytecode,
     // 2.0.1 is the newest release still targeting Java 17 bytecode.
     implementation 'io.github.mkpaz:atlantafx-base:2.0.1'
