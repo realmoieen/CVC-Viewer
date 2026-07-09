@@ -41,7 +41,7 @@ javafx {
     // Pinned to 21.0.5 (Java 17 bytecode) rather than latest: javafx-controls 23+ requires a
     // Java 21+ runtime to even load, which would silently break the Java 17 baseline.
     version = "21.0.5"
-    modules = ['javafx.controls', 'javafx.fxml']
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.web']
 }
 
 repositories {
@@ -68,6 +68,8 @@ dependencies {
     // Pinned to 2.0.1 rather than latest 2.1.0: 2.1.0 compiles to Java 21 bytecode,
     // 2.0.1 is the newest release still targeting Java 17 bytecode.
     implementation 'io.github.mkpaz:atlantafx-base:2.0.1'
+    // Renders GitHub release-note markdown in the update dialog. Core module only, no transitive deps.
+    implementation 'org.commonmark:commonmark:0.29.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     // JUnit 5 API + Engine
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'

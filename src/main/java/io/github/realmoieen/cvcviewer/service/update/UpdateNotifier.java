@@ -6,8 +6,8 @@ import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.web.WebView;
 
 import java.util.Optional;
 import java.util.logging.Level;
@@ -42,15 +42,22 @@ public final class UpdateNotifier {
                         + "Latest Version: " + info.latestVersion() + "\n\n"
                         + "What's New:");
 
-        TextArea notesArea = new TextArea(info.releaseNotes());
-        notesArea.setEditable(false);
-        notesArea.setWrapText(true);
-        notesArea.setPrefRowCount(15);
-        notesArea.setPrefColumnCount(60);
+        WebView notesView = new WebView();
+        notesView.setPrefSize(560, 360);
+        // Links clicked inside the WebView would otherwise navigate the chrome-less embedded
+        // browser itself (no back/forward UI) - cancel that and open in the real browser instead.
+        // loadContent() below never sets a location, so this only fires for actual link clicks.
+        notesView.getEngine().locationProperty().addListener((obs, oldLoc, newLoc) -> {
+            if (newLoc != null && (newLoc.startsWith("http://") || newLoc.startsWith("https://"))) {
+                notesView.getEngine().getLoadWorker().cancel();
+                hostServices.showDocument(newLoc);
+            }
+        });
+        notesView.getEngine().loadContent(ReleaseNotesRenderer.toHtml(info.releaseNotes()));
 
         BorderPane content = new BorderPane();
         content.setTop(header);
-        content.setCenter(notesArea);
+        content.setCenter(notesView);
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Update Available");
