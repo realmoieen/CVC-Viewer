@@ -54,6 +54,7 @@ public class CvcViewerApp extends Application {
 
         primaryStage.setScene(new Scene(root, 620, 640));
         controller.init(primaryStage, getHostServices(), chain, true);
+        primaryStage.setOnShown(e -> ThemeManager.applyTitleBar(primaryStage));
         primaryStage.show();
 
         UpdateNotifier.checkForUpdateAsync(getHostServices());

@@ -4,6 +4,8 @@ import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
 import io.github.realmoieen.cvcviewer.service.settings.ThemePreference;
 import javafx.application.Application;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +16,9 @@ import java.util.logging.Logger;
 public final class ThemeManager {
 
     private static final Logger LOGGER = Logger.getLogger(ThemeManager.class.getName());
+    private static final boolean WINDOWS = System.getProperty("os.name", "").toLowerCase().contains("win");
+
+    private static volatile boolean darkModeActive = false;
 
     private ThemeManager() {
     }
@@ -21,9 +26,30 @@ public final class ThemeManager {
     public static void apply(ThemePreference preference) {
         boolean dark = preference == ThemePreference.DARK
                 || (preference == ThemePreference.SYSTEM && isSystemDarkMode());
+        darkModeActive = dark;
+
         Application.setUserAgentStylesheet(dark
                 ? new PrimerDark().getUserAgentStylesheet()
                 : new PrimerLight().getUserAgentStylesheet());
+
+        if (WINDOWS) {
+            for (Window window : Window.getWindows()) {
+                if (window instanceof Stage stage) {
+                    WindowsTitleBar.setDark(stage, dark);
+                }
+            }
+        }
+    }
+
+    /**
+     * Applies the currently active theme's title bar color to a single stage - call this once,
+     * right after {@code stage.show()}, for every new window (the loop in {@link #apply} only
+     * reaches windows that already existed at the time the theme was changed).
+     */
+    public static void applyTitleBar(Stage stage) {
+        if (WINDOWS) {
+            WindowsTitleBar.setDark(stage, darkModeActive);
+        }
     }
 
     private static boolean isSystemDarkMode() {

@@ -2,6 +2,7 @@ package io.github.realmoieen.cvcviewer.ui.main;
 
 import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 import io.github.realmoieen.cvcviewer.ui.common.AppIcons;
+import io.github.realmoieen.cvcviewer.ui.theme.ThemeManager;
 import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,6 +27,7 @@ public final class ViewerWindowFactory {
         stage.setScene(new Scene(root, 620, 640));
 
         controller.init(stage, hostServices, chain, exitOnClose);
+        stage.setOnShown(e -> ThemeManager.applyTitleBar(stage));
         stage.show();
         return stage;
     }

@@ -70,6 +70,10 @@ dependencies {
     implementation 'io.github.mkpaz:atlantafx-base:2.0.1'
     // Renders GitHub release-note markdown in the update dialog. Core module only, no transitive deps.
     implementation 'org.commonmark:commonmark:0.29.0'
+    // Windows-only: calls DwmSetWindowAttribute so the native title bar actually goes dark
+    // in dark theme (AtlantaFX/JavaFX CSS only styles window content, not OS-drawn chrome).
+    implementation 'net.java.dev.jna:jna:5.19.1'
+    implementation 'net.java.dev.jna:jna-platform:5.19.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     // JUnit 5 API + Engine
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'

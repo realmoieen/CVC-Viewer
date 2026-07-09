@@ -208,6 +208,7 @@ public class MainController {
             aboutStage.setResizable(false);
             aboutStage.setScene(new Scene(root));
             AppIcons.applyTo(aboutStage);
+            aboutStage.setOnShown(e -> ThemeManager.applyTitleBar(aboutStage));
             aboutStage.showAndWait();
         } catch (IOException ex) {
             AlertFactory.showError(ex, hostServices);
