@@ -6,13 +6,13 @@ import io.github.realmoieen.cvcviewer.log.LoggingBootstrap;
 import io.github.realmoieen.cvcviewer.service.file.CertificateFileService;
 import io.github.realmoieen.cvcviewer.service.update.UpdateNotifier;
 import io.github.realmoieen.cvcviewer.ui.common.AlertFactory;
+import io.github.realmoieen.cvcviewer.ui.common.AppIcons;
 import io.github.realmoieen.cvcviewer.ui.main.MainController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
@@ -39,8 +39,9 @@ public class CvcViewerApp extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         Application.setUserAgentStylesheet(new PrimerLight().getUserAgentStylesheet());
+        AppIcons.applyTo(primaryStage);
 
-        List<CVCertificate> chain = loadInitialChain();
+        List<CVCertificate> chain = loadInitialChain(primaryStage);
         if (chain == null) {
             Platform.exit();
             return;
@@ -50,7 +51,6 @@ public class CvcViewerApp extends Application {
         Parent root = loader.load();
         MainController controller = loader.getController();
 
-        primaryStage.getIcons().add(new Image(getClass().getResourceAsStream("/images/cvc-logo.png")));
         primaryStage.setScene(new Scene(root, 620, 640));
         controller.init(primaryStage, getHostServices(), chain, true);
         primaryStage.show();
@@ -58,14 +58,14 @@ public class CvcViewerApp extends Application {
         UpdateNotifier.checkForUpdateAsync(getHostServices());
     }
 
-    private List<CVCertificate> loadInitialChain() {
+    private List<CVCertificate> loadInitialChain(Stage owner) {
         List<String> args = getParameters().getRaw();
         CertificateFileService fileService = new CertificateFileService();
         try {
             if (!args.isEmpty()) {
                 return fileService.load(new File(args.get(0)));
             }
-            File file = fileService.chooseOpenFile(null);
+            File file = fileService.chooseOpenFile(owner);
             if (file == null) {
                 return null;
             }

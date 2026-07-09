@@ -63,6 +63,7 @@ public final class AlertFactory {
         expandableContent.add(textArea, 0, 1);
 
         alert.getDialogPane().setExpandableContent(expandableContent);
+        AppIcons.applyTo(alert);
 
         if (onReportIssue != null) {
             ButtonType reportIssue = new ButtonType("Report Issue...", ButtonBar.ButtonData.HELP_2);
@@ -83,6 +84,7 @@ public final class AlertFactory {
                 ButtonType.YES, ButtonType.NO);
         alert.setTitle("Warning");
         alert.setHeaderText(null);
+        AppIcons.applyTo(alert);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.YES;
     }
@@ -91,6 +93,7 @@ public final class AlertFactory {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
         alert.setTitle(title);
         alert.setHeaderText(null);
+        AppIcons.applyTo(alert);
         alert.showAndWait();
     }
 

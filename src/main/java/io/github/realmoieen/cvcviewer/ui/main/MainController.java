@@ -6,6 +6,7 @@ import io.github.realmoieen.cvcviewer.info.AppInfo;
 import io.github.realmoieen.cvcviewer.service.file.CertificateFileService;
 import io.github.realmoieen.cvcviewer.ui.about.AboutController;
 import io.github.realmoieen.cvcviewer.ui.common.AlertFactory;
+import io.github.realmoieen.cvcviewer.ui.common.AppIcons;
 import io.github.realmoieen.cvcviewer.ui.detail.DetailController;
 import io.github.realmoieen.cvcviewer.ui.path.PathController;
 import javafx.application.HostServices;
@@ -102,19 +103,21 @@ public class MainController {
         if (currentCertificate == null) {
             return;
         }
-        File file = fileService.chooseSaveFile(stage, currentCertificate);
-        if (file == null) {
-            return;
-        }
 
         List<CertificateFileService.SaveFormat> formats = fileService.availableFormats(currentChain.size());
         ChoiceDialog<CertificateFileService.SaveFormat> dialog = new ChoiceDialog<>(formats.get(0), formats);
         dialog.setTitle("Save As");
         dialog.setHeaderText(null);
         dialog.setContentText("Select output format:");
+        AppIcons.applyTo(dialog);
 
         Optional<CertificateFileService.SaveFormat> chosen = dialog.showAndWait();
         if (chosen.isEmpty()) {
+            return;
+        }
+
+        File file = fileService.chooseSaveFile(stage, currentCertificate);
+        if (file == null) {
             return;
         }
 
@@ -168,6 +171,7 @@ public class MainController {
             aboutStage.initOwner(stage);
             aboutStage.setResizable(false);
             aboutStage.setScene(new Scene(root));
+            AppIcons.applyTo(aboutStage);
             aboutStage.showAndWait();
         } catch (IOException ex) {
             AlertFactory.showError(ex, hostServices);

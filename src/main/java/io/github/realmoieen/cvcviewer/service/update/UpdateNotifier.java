@@ -1,6 +1,7 @@
 package io.github.realmoieen.cvcviewer.service.update;
 
 import io.github.realmoieen.cvcviewer.info.AppInfo;
+import io.github.realmoieen.cvcviewer.ui.common.AppIcons;
 import javafx.application.HostServices;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
@@ -64,6 +65,7 @@ public final class UpdateNotifier {
         alert.setHeaderText(null);
         alert.getDialogPane().setContent(content);
         alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
+        AppIcons.applyTo(alert);
 
         alert.showAndWait().ifPresent(button -> {
             if (button == ButtonType.YES) {
