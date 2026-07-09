@@ -23,7 +23,7 @@ def copyright = "Open-source software"
 def uuid="62d77761-3da1-4efc-a865-0cafa56aef7d"
 def outputDir = layout.buildDirectory.dir("installer").get().asFile
 group = 'io.github.realmoieen.cvcviewer'
-version = '3.1'
+version = '4.0'
 
 java {
     toolchain {
