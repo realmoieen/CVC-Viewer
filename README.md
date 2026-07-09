@@ -3,7 +3,7 @@
 
 # CVC-Viewer
 
-![](./icons/cvc-logo.png)
+![](./icons/cvc-viewer-lockup-light.png)
 
 **Author:** Moieen Abbas
 
