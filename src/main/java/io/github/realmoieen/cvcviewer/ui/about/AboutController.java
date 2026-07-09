@@ -9,22 +9,22 @@ import javafx.stage.Stage;
 
 public class AboutController {
 
-    private static final String GITHUB_URL = "https://github.com/realmoieen/CVC-Viewer";
+    private static final String WEBSITE_URL = "https://realmoieen.github.io/CVC-Viewer/";
 
     @FXML
     private Label versionLabel;
     @FXML
-    private Hyperlink githubLink;
+    private Hyperlink websiteLink;
 
     private HostServices hostServices;
 
     @FXML
     private void initialize() {
         versionLabel.setText("Version: " + AppInfo.APP_VERSION);
-        githubLink.setText(GITHUB_URL);
-        githubLink.setOnAction(e -> {
+        websiteLink.setText(WEBSITE_URL);
+        websiteLink.setOnAction(e -> {
             if (hostServices != null) {
-                hostServices.showDocument(GITHUB_URL);
+                hostServices.showDocument(WEBSITE_URL);
             }
         });
     }

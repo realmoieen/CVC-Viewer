@@ -5,7 +5,7 @@
 
 ![](./icons/cvc-viewer-lockup-light.png)
 
-**Author:** Moieen Abbas
+**Website:** [realmoieen.github.io/CVC-Viewer](https://realmoieen.github.io/CVC-Viewer/) &nbsp;·&nbsp; **Author:** Moieen Abbas
 
 ---
 

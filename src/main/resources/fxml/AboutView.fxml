@@ -24,7 +24,7 @@
                 <Label style="-fx-font-weight: bold; -fx-font-size: 18px;" text="CVC-Viewer"/>
                 <Label fx:id="versionLabel"/>
                 <Label text="Vendor: Moieen Abbas"/>
-                <Hyperlink fx:id="githubLink"/>
+                <Hyperlink fx:id="websiteLink"/>
                 <Label maxWidth="320.0" wrapText="true"
                        text="Card Verifiable Certificate (CVC) Viewer. A utility to inspect and analyze CVC certificates used in EAC systems."/>
             </VBox>

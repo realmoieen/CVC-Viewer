@@ -125,7 +125,7 @@ jar {
                 // Project Info
                 'Project-Name': project.name,
                 'Project-Version': project.version,
-                'Project-URL': 'https://github.com/realmoieen/CVC-Viewer',
+                'Project-URL': 'https://realmoieen.github.io/CVC-Viewer/',
 
                 // Java Module (optional but recommended)
                 'Automatic-Module-Name': 'io.github.realmoieen'
@@ -353,7 +353,7 @@ tasks.register("jpackageWindows", Exec) {
             "--vendor", vendor,
             "--description", description,
             "--copyright", copyright,
-            "--about-url", "https://github.com/realmoieen/CVC-Viewer",
+            "--about-url", "https://realmoieen.github.io/CVC-Viewer/",
             "--file-associations", "${projectDir}/packaging/cvcert.properties",
             "--file-associations", "${projectDir}/packaging/cvreq.properties",
             "--java-options", "-Dfile.encoding=UTF-8",
@@ -383,7 +383,7 @@ tasks.register("jpackageMac", Exec) {
             "--vendor", vendor,
             "--description", description,
             "--copyright", copyright,
-            "--about-url", "https://github.com/realmoieen/CVC-Viewer",
+            "--about-url", "https://realmoieen.github.io/CVC-Viewer/",
             "--file-associations", "${projectDir}/packaging/cvcert.properties",
             "--file-associations", "${projectDir}/packaging/cvreq.properties",
             "--verbose"
@@ -414,6 +414,7 @@ tasks.register("jpackageLinux", Exec) {
             "--vendor", vendor,
             "--description", description,
             "--copyright", copyright,
+            "--about-url", "https://realmoieen.github.io/CVC-Viewer/",
 
             "--file-associations", "${projectDir}/packaging/cvcert-linux.properties",
             "--file-associations", "${projectDir}/packaging/cvreq-linux.properties",

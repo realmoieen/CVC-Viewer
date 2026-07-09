@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CVC-Viewer — Card Verifiable Certificate Viewer</title>
+    <meta name="description"
+          content="A free, open-source desktop utility to view and inspect Card Verifiable Certificates (CVC, BSI TR-03110) used in EU EAC ePassports and eID systems. Available for Windows, macOS, and Linux."/>
+
+    <link rel="icon" type="image/png" sizes="256x256" href="assets/img/favicon-256.png"/>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png"/>
+    <link rel="apple-touch-icon" href="assets/img/favicon-256.png"/>
+
+    <meta property="og:title" content="CVC-Viewer — Card Verifiable Certificate Viewer"/>
+    <meta property="og:description"
+          content="View and inspect Card Verifiable Certificates (BSI TR-03110) used in EU EAC ePassports and eID systems."/>
+    <meta property="og:image" content="https://realmoieen.github.io/CVC-Viewer/assets/img/cvc-viewer-lockup-light.png"/>
+    <meta property="og:type" content="website"/>
+
+    <link rel="stylesheet" href="assets/css/style.css"/>
+</head>
+<body>
+
+<header class="site-nav">
+    <div class="wrap">
+        <a class="brand" href="#top">
+            <img src="assets/img/cvc-viewer-general-32.png" alt="" width="32" height="32"/>
+            <strong>CVC-Viewer</strong>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#screenshots">Screenshots</a></li>
+                <li><a href="#download">Download</a></li>
+                <li><a href="https://github.com/realmoieen/CVC-Viewer">GitHub</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main id="top">
+
+    <section class="hero">
+        <div class="wrap">
+            <img class="lockup lockup-light" src="assets/img/cvc-viewer-lockup-light.png" alt="CVC-Viewer"/>
+            <img class="lockup lockup-dark" src="assets/img/cvc-viewer-lockup-dark.png" alt="CVC-Viewer"/>
+            <p class="tagline">
+                A free, open-source desktop utility to view and inspect <strong>Card Verifiable Certificates
+                (CVC)</strong> — the specialized digital certificates defined in BSI TR-03110 and used across the
+                EU EAC ecosystem for ePassports, eIDs, and inspection systems.
+            </p>
+            <div class="cta-row">
+                <a class="btn btn-primary" href="#download">Download CVC-Viewer</a>
+                <a class="btn btn-secondary" href="https://github.com/realmoieen/CVC-Viewer">View Source on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="alt">
+        <div class="wrap">
+            <h2 class="section-title">Features</h2>
+            <p class="section-subtitle">Everything you need to inspect a CV certificate, without assuming X.509 semantics.</p>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📇</div>
+                    <h3>BSI TR-03110 certificates</h3>
+                    <p>Full support for CV Certificates, CV Link Certificates, CV Requests, and Authenticated Requests.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔀</div>
+                    <h3>Format-agnostic parsing</h3>
+                    <p>Loads raw DER, Base64 (single or comma-separated), and PEM-style inputs automatically.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Certificate chains</h3>
+                    <p>Inspect full chains such as CVCA → DV → Terminal, with a dedicated Path view and per-node validity status.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>RSA &amp; ECDSA</h3>
+                    <p>PKCS#1 v1.5 and PSS for RSA, plus ECDSA — SHA-1, SHA-256, and SHA-512 across the board.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖱️</div>
+                    <h3>Drag &amp; drop</h3>
+                    <p>Drop a certificate file straight onto the window, or open it from the file chooser or command line.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌗</div>
+                    <h3>Light, dark, or system theme</h3>
+                    <p>A modern JavaFX + AtlantaFX interface that follows your OS appearance, or your own choice.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="screenshots">
+        <div class="wrap">
+            <h2 class="section-title">Screenshots</h2>
+            <p class="section-subtitle">General, detail, and certificate-path views.</p>
+            <div class="screenshot-grid">
+                <figure class="screenshot-card">
+                    <img src="assets/img/general_screenshot.png" alt="CVC-Viewer General tab"/>
+                    <figcaption>General</figcaption>
+                </figure>
+                <figure class="screenshot-card">
+                    <img src="assets/img/detail_screenshot.png" alt="CVC-Viewer Details tab"/>
+                    <figcaption>Details</figcaption>
+                </figure>
+                <figure class="screenshot-card">
+                    <img src="assets/img/path_screenshot.png" alt="CVC-Viewer Path tab"/>
+                    <figcaption>Path</figcaption>
+                </figure>
+            </div>
+        </div>
+    </section>
+
+    <section id="download" class="alt">
+        <div class="wrap">
+            <h2 class="section-title">Download</h2>
+            <p class="section-subtitle">
+                Two flavors for every platform: a self-contained <strong>installer</strong> (bundles its own Java
+                runtime) or a smaller <strong>portable</strong> build that uses a system-installed Java 17+.
+            </p>
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="os-icon">🪟</div>
+                    <h3>Windows</h3>
+                    <p>MSI installer or portable EXE</p>
+                    <a class="btn btn-primary" href="https://github.com/realmoieen/CVC-Viewer/releases/latest">Get the latest release</a>
+                </div>
+                <div class="download-card">
+                    <div class="os-icon">🍎</div>
+                    <h3>macOS</h3>
+                    <p>DMG installer or portable .app</p>
+                    <a class="btn btn-primary" href="https://github.com/realmoieen/CVC-Viewer/releases/latest">Get the latest release</a>
+                </div>
+                <div class="download-card">
+                    <div class="os-icon">🐧</div>
+                    <h3>Linux</h3>
+                    <p>DEB installer or portable tar.gz</p>
+                    <a class="btn btn-primary" href="https://github.com/realmoieen/CVC-Viewer/releases/latest">Get the latest release</a>
+                </div>
+            </div>
+            <p class="download-note">
+                All builds are produced automatically from source by GitHub Actions.
+                See the <a href="https://github.com/realmoieen/CVC-Viewer#how-to-use-cvc-viewer">README</a>
+                for full installation instructions per platform.
+            </p>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <div class="wrap">
+        <div class="footer-links">
+            <a href="https://github.com/realmoieen/CVC-Viewer">GitHub</a>
+            <a href="https://github.com/realmoieen/CVC-Viewer/releases">Releases</a>
+            <a href="https://github.com/realmoieen/CVC-Viewer/issues">Issues</a>
+            <a href="https://github.com/realmoieen/CVC-Viewer/blob/master/LICENSE">License</a>
+        </div>
+        <p>CVC-Viewer &middot; Author: Moieen Abbas</p>
+    </div>
+</footer>
+
+</body>
+</html>
