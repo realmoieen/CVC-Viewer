@@ -1,6 +1,6 @@
 package io.github.realmoieen.cvcviewer.path;
 
-import io.github.realmoieen.cvcviewer.dto.CVCertificate;
+import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 
 import javax.swing.*;
 import javax.swing.tree.*;

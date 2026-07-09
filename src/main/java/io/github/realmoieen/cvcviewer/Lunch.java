@@ -1,8 +1,8 @@
 package io.github.realmoieen.cvcviewer;
 
-import io.github.realmoieen.cvcviewer.dto.CVCertificate;
+import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 import io.github.realmoieen.cvcviewer.ui.DialogsUtil;
-import io.github.realmoieen.cvcviewer.util.CVCertificatePEMUtil;
+import io.github.realmoieen.cvcviewer.core.parser.CVCertificatePEMUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.swing.*;

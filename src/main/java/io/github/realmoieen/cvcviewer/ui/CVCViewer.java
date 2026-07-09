@@ -1,18 +1,15 @@
 package io.github.realmoieen.cvcviewer.ui;
 
-import io.github.realmoieen.cvcviewer.dto.CVCertificate;
+import io.github.realmoieen.cvcviewer.core.format.CertificateDetailFormatter;
+import io.github.realmoieen.cvcviewer.core.format.DetailRow;
+import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 import io.github.realmoieen.cvcviewer.info.AppInfo;
 import io.github.realmoieen.cvcviewer.path.CvcTreeBuilder;
 import io.github.realmoieen.cvcviewer.path.CvcTreeNode;
 import io.github.realmoieen.cvcviewer.update.UpdateChecker;
-import io.github.realmoieen.cvcviewer.util.CVCertificatePEMUtil;
+import io.github.realmoieen.cvcviewer.core.parser.CVCertificatePEMUtil;
 import de.bsi.testbedutils.cvc.cvcertificate.*;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVBaseException;
-import de.bsi.testbedutils.cvc.cvcertificate.exception.CVInvalidKeySourceException;
-import de.bsi.testbedutils.cvc.cvcertificate.exception.CVKeyTypeNotSupportedException;
-import de.bsi.testbedutils.cvc.cvcertificate.exception.CVMissingKeyException;
-import org.bouncycastle.jce.spec.ECParameterSpec;
-import org.bouncycastle.math.ec.ECCurve;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -28,13 +25,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
-import java.security.spec.RSAPublicKeySpec;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -43,7 +37,6 @@ import java.util.Map;
 public class CVCViewer extends JFrame {
     private static boolean isUpdatedChecked = false;
     private final DateFormat dateFormat = new SimpleDateFormat("dd/MM/yy");
-    private final Map<String, String> map_tableData = new LinkedHashMap<>();
     private List<CVCertificate> currentChain;   // leaf → root
     private CVCertificate currentCertificate;   // selected certificate
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -122,11 +115,9 @@ public class CVCViewer extends JFrame {
         initComponents();
         label_certIcon.setIconTextGap(5);
         detail_table.getSelectionModel().addListSelectionListener((ListSelectionEvent event) -> {
-            String selectedData = null;
             int selectedRow = detail_table.getSelectedRow();
-            selectedData = (String) detail_table.getValueAt(selectedRow, 0);
-            selectedData = map_tableData.getOrDefault(selectedData, selectedData);
-            selectedRowDetailTextArea.setText(selectedData);
+            if (selectedRow < 0) return;
+            selectedRowDetailTextArea.setText((String) detail_table.getValueAt(selectedRow, 1));
         });
         path_tree.addTreeSelectionListener(e -> {
 
@@ -209,278 +200,13 @@ public class CVCViewer extends JFrame {
     }
 
     void populateDetailTableData() {
-
-        map_tableData.put("Version", currentCertificate.getProfileId() + "");
-        if (currentCertificate.getCertHolderRef() != null) {
-            map_tableData.put("Holder Reference", currentCertificate.getCertHolderRef());
-        }
-        if (currentCertificate.getCertHolderAuth() != null && currentCertificate.getCertHolderAuth().getAuth() != null) {
-            CVAuthorization auth = currentCertificate.getCertHolderAuth().getAuth();
-            map_tableData.put("Role", auth.getRole().name());
-            map_tableData.put("Term Type", auth.getTermType().name());
-            map_tableData.put("Authorization", getCVAutorizationInfo(currentCertificate.getCertHolderAuth()));
-        }
-        if (currentCertificate.getCertAuthRef() != null) {
-            map_tableData.put("CA Reference", currentCertificate.getCertAuthRef());
-        }
-        if (currentCertificate.hasOuterSignature()) {
-            map_tableData.put("Outer CA Reference", currentCertificate.getOuterAuthRef());
-        }
-        if (currentCertificate.getEffDate() != null && currentCertificate.getEffDate().getDate() != null) {
-            map_tableData.put("Valid From", dateFormat.format(currentCertificate.getEffDate().getDate()));
-        }
-        if (currentCertificate.getExpDate() != null && currentCertificate.getExpDate().getDate() != null) {
-            map_tableData.put("Valid To", dateFormat.format(currentCertificate.getExpDate().getDate()));
-        }
-        getCVExtention(currentCertificate.getExtension());
-        try {
-            getPublicKeyDetails(currentCertificate);
-        } catch (Exception e) {
-            map_tableData.put("Public Key Detail", "Not available");
-        }
-
-        map_tableData.put("Signature Algorithm", currentCertificate.getPublicKey().getAlgorithm().getSignAlgo() +" ("+currentCertificate.getPublicKey().getAlgorithm().getOID()+")");
-        if (currentCertificate.getSignature() != null) {
-            map_tableData.put("Signature", currentCertificate.getSignature().getHexSplit(":", "", 48));
-        }
-        if (currentCertificate.hasOuterSignature()) {
-            map_tableData.put("Outer Signature", currentCertificate.getOuterSignature().getHexSplit(":", "", 48));
-        }
-        String[][] table_data = new String[map_tableData.size()][2];
-        int i = 0;
-        for (Map.Entry<String, String> entry : map_tableData.entrySet()) {
-
-            table_data[i][0] = entry.getKey();
-            table_data[i][1] = entry.getValue();
-            i++;
+        List<DetailRow> rows = CertificateDetailFormatter.format(currentCertificate);
+        String[][] table_data = new String[rows.size()][2];
+        for (int i = 0; i < rows.size(); i++) {
+            table_data[i][0] = rows.get(i).field();
+            table_data[i][1] = rows.get(i).value();
         }
         detail_table.setModel(new DefaultTableModel(table_data, new String[]{"Field", "Value"}));
-    }
-
-    public void getPublicKeyDetails(CVCertificate obj_cvCert) throws Exception {
-        if (obj_cvCert.getPublicKey().getAlgorithm().name().contains("RSA")) {
-            getRSAPublicKeyInfos(obj_cvCert);
-        } else if (obj_cvCert.getPublicKey().getAlgorithm().name().contains("ECDSA")) {
-            getECPublicKeyInfos(obj_cvCert);
-            ;
-        }
-    }
-
-    private void getRSAPublicKeyInfos(CVCertificate obj_cvCert) throws CVInvalidKeySourceException, CVMissingKeyException, CVKeyTypeNotSupportedException {
-        RSAPublicKeySpec rsaPublicKeySpec = obj_cvCert.getPublicKey().getRSAKey();
-        map_tableData.put("Public Key Algorithm", obj_cvCert.getPublicKey().getAlgorithm().getKeyType().name());
-        map_tableData.put("Public Key Length", "(" + obj_cvCert.getPublicKey().getKeyLength() + " bit)");
-        map_tableData.put("Modulus", "(" + rsaPublicKeySpec.getModulus().bitLength() + " bit)");
-        map_tableData.put("Exponent", rsaPublicKeySpec.getPublicExponent().toString() + " (0x" + rsaPublicKeySpec.getPublicExponent().toString(16) + ")");
-        map_tableData.put("Public Key Detail", new DataBuffer(rsaPublicKeySpec.getModulus().toByteArray()).getHexSplit(":", "", 48));
-    }
-
-    private void getECPublicKeyInfos(CVCertificate obj_cvCert) throws CVInvalidKeySourceException, CVMissingKeyException, CVKeyTypeNotSupportedException {
-        StringBuilder out = new StringBuilder(2000);
-        map_tableData.put("Public Key Algorithm", obj_cvCert.getPublicKey().getAlgorithm().getKeyType().name());
-        map_tableData.put("Public Key Length", "(" + obj_cvCert.getPublicKey().getKeyLength() + " bit)");
-
-        ECPubPoint ecPublicPoint = obj_cvCert.getPublicKey().getECPublicPoint();
-
-        ECParameterSpec domainParams = null;
-        ECCCurves curve = null;
-        if (obj_cvCert.getPublicKey().isDomainParamPresent()) {
-            domainParams = obj_cvCert.getPublicKey().getDomainParam();
-
-            curve = ECCCurves.getECCCuveEnum(domainParams);
-            map_tableData.put("EC Curve", curve == null ? "Unknown" : curve.name());
-        }
-        if (domainParams != null) {
-            if (domainParams.getCurve() instanceof ECCurve.Fp) {
-                out.append("P:\n");
-                out.append(new DataBuffer(((ECCurve.Fp) domainParams.getCurve()).getQ().toByteArray()).getHexSplit(":", "\t", 48));
-            }
-            out.append("A:\n");
-            out.append(new DataBuffer(domainParams.getCurve().getA().toBigInteger().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("B:\n");
-            out.append(new DataBuffer(domainParams.getCurve().getB().toBigInteger().toByteArray()).getHexSplit(":", "\t", 48));
-        }
-
-        out.append("X:\n");
-        out.append(new DataBuffer(ecPublicPoint.getX().toByteArray()).getHexSplit(":", "\t", 48));
-
-        out.append("Y:\n");
-        out.append(new DataBuffer(ecPublicPoint.getY().toByteArray()).getHexSplit(":", "\t", 48));
-
-        if (domainParams != null) {
-            out.append("Q:\n");
-            out.append(new DataBuffer(domainParams.getN().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("Gx:\n");
-            out.append(new DataBuffer(domainParams.getG().normalize().getXCoord().toBigInteger().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("Gy:\n");
-            out.append(new DataBuffer(domainParams.getG().normalize().getYCoord().toBigInteger().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("Cofactor: ");
-            out.append(domainParams.getH());
-            out.append(" (0x");
-            out.append(Integer.toHexString(domainParams.getH().intValue()));
-            out.append(")\n");
-        } else if (curve != null) {
-            out.append("Q:\n");
-            out.append(new DataBuffer(curve.getECParameter().getOrder().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("Gx:\n");
-            out.append(new DataBuffer(curve.getECParameter().getGenerator().getAffineX().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("Gy:\n");
-            out.append(new DataBuffer(curve.getECParameter().getGenerator().getAffineY().toByteArray()).getHexSplit(":", "\t", 48));
-
-            out.append("Cofactor: ");
-            out.append(curve.getECParameter().getCofactor());
-            out.append(" (0x");
-            out.append(Integer.toHexString(curve.getECParameter().getCofactor()));
-            out.append(")\n");
-        }
-
-        if (domainParams != null && domainParams.getSeed() != null) {
-            out.append("Seed:\n");
-            out.append(new DataBuffer(domainParams.getSeed()).getHexSplit(":", "\t", 48));
-            out.append("\n");
-        }
-        map_tableData.put("Public Key Detail", out.toString());
-    }
-
-    public String getCVAutorizationInfo(CVHolderAuth cert_holderAuth) {
-        StringBuilder out = new StringBuilder(1000);
-
-        if (cert_holderAuth == null
-                || cert_holderAuth.getAuth() == null) {
-            return "";
-        }
-
-        CVAuthorization cvAuthorization = cert_holderAuth.getAuth();
-
-        if (TermType.InspectionSystem.equals(cvAuthorization.getTermType())) {
-            out.append("Common:\n");
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationIS.auth_Read_eID));
-
-            out.append("Read:\n");
-            out.append("\t");
-            out.append(getSingleCVAutorizationIS(cvAuthorization, CVAuthorizationIS.auth_Read_DG3));
-            out.append(getSingleCVAutorizationIS(cvAuthorization, CVAuthorizationIS.auth_Read_DG4));
-            out.append("\n");
-        }
-        if (TermType.AuthenticationTerminal.equals(cvAuthorization.getTermType())) {
-            out.append("Common:\n");
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_AgeVerification));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_CommunityIDVerification));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_RestrictedIdentification));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_PrivilegedTerminal));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_CANAllowed));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_PINManagement));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_InstallCertificate));
-            out.append(getCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_InstallQulifiedCertificate));
-
-            out.append("Read:\n");
-            out.append("\t");
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG1));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG2));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG3));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG4));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG5));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG6));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG7));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG8));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG9));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG10));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG11));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG12));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG13));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG14));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG15));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG16));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG17));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG18));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG19));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG20));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Read_DG21));
-            out.append("\n");
-
-            out.append("Write:\n");
-            out.append("\t");
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG17));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG18));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG19));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG20));
-            out.append(getSingleCVAutorizationAT(cvAuthorization, CVAuthorizationAT.auth_Write_DG21));
-            out.append("\n");
-        }
-        if (TermType.SignatureTerminal.equals(cvAuthorization.getTermType())) {
-            out.append("\tCommon:\n");
-            out.append(getCVAutorizationST(cvAuthorization, CVAuthorizationST.auth_GenerateQualifiedSignature));
-            out.append(getCVAutorizationST(cvAuthorization, CVAuthorizationST.auth_GenerateSignature));
-        }
-
-        return out.toString();
-    }
-
-    private String getCVAutorizationAT(CVAuthorization cvAuthorization, int cvAuthorizationAT) {
-        if (cvAuthorization.getAuth(cvAuthorizationAT)) {
-            StringBuilder out = new StringBuilder(50);
-            out.append("\t");
-            out.append(CVAuthorizationAT.getText(cvAuthorizationAT));
-            out.append("\n");
-            return out.toString();
-        } else {
-            return "";
-        }
-    }
-
-    private String getCVAutorizationST(CVAuthorization cvAuthorization, int cvAuthorizationST) {
-        if (cvAuthorization.getAuth(cvAuthorizationST)) {
-            StringBuilder out = new StringBuilder(50);
-            out.append("\t\t\t\t");
-            out.append(CVAuthorizationST.getText(cvAuthorizationST));
-            out.append("\n");
-            return out.toString();
-        } else {
-            return "";
-        }
-    }
-
-    private String getSingleCVAutorizationAT(CVAuthorization cvAuthorization, int cvAuthorizationAT) {
-        if (cvAuthorization.getAuth(cvAuthorizationAT)) {
-            return CVAuthorizationAT.getText(cvAuthorizationAT) + " ";
-        } else {
-            return "";
-        }
-    }
-
-    private String getSingleCVAutorizationIS(CVAuthorization cvAuthorization, int cvAuthorizationIS) {
-        if (cvAuthorization.getAuth(cvAuthorizationIS)) {
-            return CVAuthorizationIS.getText(cvAuthorizationIS) + " ";
-        } else {
-            return "";
-        }
-    }
-
-    private String getCVExtention(CVExtension extension) {
-        StringBuilder out = new StringBuilder();
-        if (extension != null && extension.getExtensions() != null) {
-            for (CVExtensionData cvExtensionData : extension.getExtensions()) {
-                if (CVExtensionType.extDescription.equals(cvExtensionData.getType())) {
-                    out.append("Extended Description:\n");
-                } else if (CVExtensionType.extSector.equals(cvExtensionData.getType())) {
-                    out.append("Extended Sector:\n");
-                } else {
-                    out.append(cvExtensionData.getType().name()).append(":\n");
-                }
-                out.append(cvExtensionData.getHash1().getHexSplit(":", "\t", 48));
-                if (cvExtensionData.getHash2() != null) {
-                    out.append(cvExtensionData.getHash2().getHexSplit(":", "\t", 48));
-                }
-            }
-            map_tableData.put("CV extensions", out.toString());
-        }
-        return out.toString();
     }
 
     /**

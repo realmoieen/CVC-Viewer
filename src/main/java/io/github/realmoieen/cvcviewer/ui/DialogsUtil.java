@@ -1,7 +1,7 @@
 package io.github.realmoieen.cvcviewer.ui;
 
-import io.github.realmoieen.cvcviewer.dto.CVCertificate;
-import io.github.realmoieen.cvcviewer.util.CVCertificatePEMUtil;
+import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
+import io.github.realmoieen.cvcviewer.core.parser.CVCertificatePEMUtil;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;

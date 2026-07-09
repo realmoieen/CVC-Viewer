@@ -1,6 +1,6 @@
-package io.github.realmoieen.cvcviewer.util;
+package io.github.realmoieen.cvcviewer.core.parser;
 
-import io.github.realmoieen.cvcviewer.dto.CVCertificate;
+import io.github.realmoieen.cvcviewer.core.model.CVCertificate;
 import de.bsi.testbedutils.cvc.cvcertificate.DataBuffer;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVBaseException;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.CVTagNotFoundException;

@@ -1,4 +1,4 @@
-package io.github.realmoieen.cvcviewer.dto;
+package io.github.realmoieen.cvcviewer.core.model;
 
 import de.bsi.testbedutils.cvc.cvcertificate.DataBuffer;
 import de.bsi.testbedutils.cvc.cvcertificate.exception.*;
