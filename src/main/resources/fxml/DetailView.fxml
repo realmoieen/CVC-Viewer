@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="io.github.realmoieen.cvcviewer.ui.detail.DetailController">
+    <padding>
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+    </padding>
+
+    <TableView fx:id="detailTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="fieldColumn" prefWidth="160.0" text="Field"/>
+            <TableColumn fx:id="valueColumn" prefWidth="380.0" text="Value"/>
+        </columns>
+    </TableView>
+
+    <TextArea fx:id="selectedRowDetail" editable="false" prefRowCount="6" wrapText="true"/>
+</VBox>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="io.github.realmoieen.cvcviewer.ui.main.GeneralController">
+    <padding>
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="8.0">
+        <ImageView fx:id="statusIcon" fitHeight="28.0" fitWidth="28.0" preserveRatio="true"/>
+        <Label style="-fx-font-weight: bold; -fx-font-size: 14px;"
+               text="Card Verifiable Certificate (CVC) Information"/>
+    </HBox>
+
+    <Separator/>
+
+    <GridPane hgap="12.0" vgap="10.0">
+        <columnConstraints>
+            <ColumnConstraints minWidth="140.0"/>
+            <ColumnConstraints hgrow="ALWAYS"/>
+        </columnConstraints>
+
+        <Label style="-fx-font-weight: bold;" text="Holder Reference:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <Label fx:id="holderReferenceValue" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label style="-fx-font-weight: bold;" text="CA Reference:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <Label fx:id="caReferenceValue" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label fx:id="validFromLabel" style="-fx-font-weight: bold;" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <HBox spacing="8.0" GridPane.rowIndex="2" GridPane.columnIndex="1">
+            <Label fx:id="validFromValue"/>
+            <Label fx:id="validToLabel"/>
+            <Label fx:id="validToValue"/>
+        </HBox>
+    </GridPane>
+
+    <Separator/>
+
+    <Label fx:id="purposeLabel" wrapText="true"/>
+    <TextArea fx:id="purposeTextArea" editable="false" prefRowCount="7" wrapText="true" VBox.vgrow="ALWAYS"/>
+</VBox>
