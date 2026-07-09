@@ -41,98 +41,64 @@ This tool provides a **human-readable view** of CV Certificates without assuming
     * RSA with PKCSv1.5 and PSS (SHA1, SHA256, SHA512)
     * ECDSA (SHA1, SHA256, SHA512)
 * Supports **single certificates** and **certificate chains**
+* **Drag and drop** a certificate file onto the window to open it
 
 ---
 
 ## How to Use CVC-Viewer
 
-### Windows Environment
+CVC-Viewer is a **JavaFX** desktop application (styled with [AtlantaFX](https://github.com/mkpaz/atlantafx)). Each
+platform's **GitHub Releases** page offers two kinds of downloads:
 
-The **GitHub Releases** page provides a ready-to-use **Windows ZIP distribution**.
+* **Installer** (MSI on Windows, DMG on macOS, DEB on Linux) — bundles its own trimmed Java runtime, no
+  prerequisites needed on the target machine.
+* **Portable** (ZIP on Windows/macOS, tar.gz on Linux) — a much smaller download that ships **no bundled JRE** and
+  relies on a **system-installed Java 17 or newer**.
 
-#### Steps:
+#### Java Requirement (Portable downloads only)
 
-1. Download the **Windows ZIP** from GitHub Releases
-2. Extract the ZIP archive
-3. Run the EXE file:
+* A **Java 17+ JRE or JDK** must be installed and on `PATH` (or `JAVA_HOME` set)
+* The bundled installers have no such requirement — they carry their own runtime
 
-   ```
-   CVCViewer.exe
-   ```
-4. A **file chooser dialog** will appear
-5. Select:
+### Windows
 
-    * CV Certificate
-    * CV Request
-    * Related EAC/CVC files
+**Installer:** run `CVC-Viewer-<version>.msi` from the Windows Releases asset.
 
-The certificate details will be displayed in the viewer.
+**Portable:** extract `CVC-Viewer-<version>-windows-portable.zip` and run `CVC-Viewer-<version>-portable.exe`
+(requires system Java 17+).
 
-#### Java Requirement (Windows)
+A **file chooser dialog** appears on launch — select a CV Certificate, CV Request, or related EAC/CVC file — and the
+certificate details are displayed in the viewer.
 
-* Java **must be installed**
-* OR `JAVA_HOME` must be correctly set in system environment variables
-* **Minimum required JRE:**
+### macOS
 
-  ```
-  Java 1.8.0_131
-  ```
+**Installer:** open `CVC-Viewer-<version>.dmg` and drag the app into Applications.
 
----
+**Portable:** extract `CVC-Viewer-<version>-macos-portable.zip` and run the `CVC-Viewer.app` bundle (requires system
+Java 17+).
 
-### Linux & macOS Environment
+### Linux
 
-For Linux and macOS, use the **executable JAR** provided in GitHub Releases.
+**Installer:** install `CVC-Viewer-<version>.deb` via your package manager.
 
-⚠️ This application required Graphical Environment to run, headless is not supported.
+**Portable:** extract `CVC-Viewer-<version>-linux-portable.tar.gz` and run `./cvc-viewer.sh` (requires system Java
+17+). A `.desktop` entry is included for menu integration.
 
-#### Option 1: Launch with File Chooser
+⚠️ This application requires a graphical environment to run — headless is not supported.
 
-```bash
-java -jar <location>/CVC-Viewer-2.0.jar
-```
-
-This will open the application and prompt you to select a certificate file.
-
-#### Option 2: Open Certificate Directly
+#### Opening a certificate directly (any platform)
 
 ```bash
-java -jar <location>/CVC-Viewer-2.0.jar <certificate_path>
+java -jar CVC-Viewer-<version>.jar <certificate_path>
 ```
-
-This will launch the viewer and **directly load the specified CV certificate**.
-
-#### Java Requirement (Linux & macOS)
-
-* Java Runtime Environment installed
-* **Minimum required JRE:**
-
-  ```
-  Java 1.8.0_131
-  ```
-
----
 
 ### Windows Integration (Context Menu and File Extension Association Support)
 
-The **Windows ZIP distribution** contains an additional `install.bat` file:
+The Windows portable ZIP contains an additional `install.bat` file. Running it registers CVC-Viewer in the Windows
+right-click context menu (`Open in CVC Viewer`) and associates it with `.cvreq`/`.cvcert` files.
 
-Run the `install.bat` file to automatically register the CVC Viewer executable in Windows.
-which performs following task:
-
-* Adds CVC-Viewer to the Windows right-click context menu `Open in CVC Viewer`
-* Register the CVC Viewer for files with extension `.cvreq` and `.cvcert`
-
-### Important Notes ⚠️
-
-* The installation creates a **direct link to the CVC-Viewer EXE file**
-* **Do NOT move or rename the EXE after installation**
-
-    * Doing so will **break the context-menu link** and **file extension association**
-* If you move the EXE, you must **re-install using `install.bat`**
-
-After installation, you can right-click a CV certificate file and open it directly using **CVC-Viewer** or directly
-double click `.cvreq` and `.cvcert` file.
+⚠️ The registration links directly to the extracted EXE — do not move or rename it afterward without re-running
+`install.bat`.
 
 ---
 
@@ -215,14 +181,28 @@ CVC-Viewer supports the following real-world scenarios:
 
 ## How to Build CVC-Viewer
 
+Requires JDK 17+ (Gradle's toolchain support will auto-provision one if needed).
+
 ```bash
 git clone https://github.com/realmoieen/CVC-Viewer.git
 cd CVC-Viewer
-#To create only exe file 
-./gradlew clean createExe 
-#To create release for windows 
-./gradlew clean windowsZip
+
+# Run from source
+./gradlew run
+
+# Run the test suite
+./gradlew test
+
+# Self-contained installer (current OS only - msi/dmg/deb are each built on their native OS)
+./gradlew jpackageNative
+
+# Portable, no-bundled-JRE artifact for the current OS family
+./gradlew portableWindows   # or portableMac / portableLinux
 ```
+
+Note: `jpackageMac`/`jpackageLinux`/`portableMac`/`portableLinux` must be run on their respective native OS — jpackage
+can't cross-compile installers for other platforms, and the JavaFX native libraries bundled into each portable
+artifact are platform-specific.
 
 ---
 
@@ -236,6 +216,9 @@ This project also includes a **CVC module** providing full support for **Card Ve
 used by EU EAC ePassports and eIDs:
 
 * [https://github.com/eID-Testbeds/common-testbed-utilities](https://github.com/eID-Testbeds/common-testbed-utilities)
+
+The UI is built with **JavaFX** and styled with **[AtlantaFX](https://github.com/mkpaz/atlantafx)**, a modern
+open-source JavaFX theme collection.
 
 ---
 
