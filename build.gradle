@@ -3,7 +3,7 @@ plugins {
     id 'application'
     id("com.gradleup.shadow") version "9.3.1"
     id 'org.openjfx.javafxplugin' version '0.1.0'
-//    id 'edu.sc.seis.launch4j' version '4.0.0'
+    id 'edu.sc.seis.launch4j' version '4.0.0'
 }
 
 def windowsZipDir = layout.buildDirectory.dir("windowsZip")
@@ -13,7 +13,7 @@ def buildJdk = System.getProperty("java.version")
 def buildVendor = System.getProperty("java.vendor")
 def buildOs = "${System.getProperty("os.name")} ${System.getProperty("os.arch")} ${System.getProperty("os.version")}"
 def appName = "CVC-Viewer"
-def mainClassName = "io.github.realmoieen.cvcviewer.Lunch"
+def mainClassName = "io.github.realmoieen.cvcviewer.app.Launcher"
 def windowsLogo = "${projectDir}/icons/cvc-logo.ico"
 def macLogo = "${projectDir}/icons/cvc-logo.icns"
 def linuxLogo = "${projectDir}/icons/cvc-logo.png"
@@ -27,10 +27,10 @@ version = '3.1'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
+        languageVersion = JavaLanguageVersion.of(17)
     }
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 application {
@@ -38,7 +38,9 @@ application {
 }
 
 javafx {
-    version = "25"
+    // Pinned to 21.0.5 (Java 17 bytecode) rather than latest: javafx-controls 23+ requires a
+    // Java 21+ runtime to even load, which would silently break the Java 17 baseline.
+    version = "21.0.5"
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
@@ -65,7 +67,9 @@ dependencies {
 //    implementation 'com.github.Keyfactor:ejbca-cert-cvc:v1.6.1'
     // Regular dependency
     implementation 'org.jdesktop:beansbinding:1.2.1'
-    implementation 'io.github.mkpaz:atlantafx-base:2.1.0'
+    // Pinned to 2.0.1 rather than latest 2.1.0: 2.1.0 compiles to Java 21 bytecode,
+    // 2.0.1 is the newest release still targeting Java 17 bytecode.
+    implementation 'io.github.mkpaz:atlantafx-base:2.0.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     // JUnit 5 API + Engine
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
@@ -134,72 +138,175 @@ shadowJar {
     archiveFileName = "${project.name}-${project.version}.jar"
 }
 
-//launch4j {
-//    mainClassName = 'com.moieen.cvc.gui.cvcviewer.Lunch'
-//    icon = "${project.rootDir}/icons/cvc-logo.ico"
-//    classpath = []
-//    jarTask = project.tasks.shadowJar
-//    errTitle = "Error CVC-Viewer"
-//    version = project.version
-//    textVersion = "$project.version"
-//    description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
-//    copyright = "Copyright (c) 2026 - Moieen Abbas"
-//    companyName = "Moieen Abbas - https://github.com/realmoieen"
-//    jreMinVersion = '1.8.0_131'
-//    supportUrl = "https://github.com/realmoieen/CVC-Viewer/issues"
-//    outfile="${project.name}-${project.version}.exe"
-//}
-//createExe{
-//    dependsOn test
-//}
+launch4j {
+    mainClassName = mainClassName
+    icon = "${project.rootDir}/icons/cvc-logo.ico"
+    classpath = []
+    jarTask = project.tasks.shadowJar
+    errTitle = "Error CVC-Viewer"
+    version = project.version
+    textVersion = "$project.version"
+    description = "The Utility to view CV Certificate.Card Verifiable Certificates (CVC) are digital certificates that are designed to be processed by devices."
+    copyright = "Copyright (c) 2026 - Moieen Abbas"
+    companyName = "Moieen Abbas - https://github.com/realmoieen"
+    jreMinVersion = '17'
+    supportUrl = "https://github.com/realmoieen/CVC-Viewer/issues"
+    outfile = "${project.name}-${project.version}-portable.exe"
+}
+createExe {
+    dependsOn test
+}
 
-//tasks.register('prepareWindowsZip') {
-//    group = 'distribution'
-//    dependsOn 'createExe'   // your launch4j task
-//
-//    doLast {
-//        copy {
-//            from(projectDir) {
-//                include "install.bat"
-//                filter { line ->
-//                    line.replaceAll("%VERSION%", project.version.toString())
-//                }
-//            }
-//
-//            // Include EXE
-//            from(layout.buildDirectory.dir('launch4j')) {
-//                include "*.exe"
-//            }
-//
-//            // Optional: include README / license
-//            from(projectDir) {
-//                include 'icons/*.png'
-//                include 'icons/*.ico'
-//                include 'README.md'
-//                include 'LICENSE'
-//            }
-//
-//            into windowsZipDir.get().asFile
-//        }
-//    }
-//}
+tasks.register('preparePortableWindows') {
+    group = 'portable'
+    dependsOn 'createExe'
 
-//tasks.register('windowsZip', Zip) {
-//    group = 'distribution'
-//    description = 'Packages Launch4j EXE and files into a Windows ZIP'
-//
-//    // Ensure EXE is created first
-//    dependsOn prepareWindowsZip
-//
-//    // ZIP name: *-windows.zip
-//    archiveBaseName = "${project.name}"
-//    archiveClassifier = 'windows'
-//    archiveExtension = 'zip'
-//
-//    destinationDirectory = layout.buildDirectory.dir('distributions')
-//
-//    from windowsZipDir
-//}
+    doLast {
+        copy {
+            from(projectDir) {
+                include "install.bat"
+                filter { line ->
+                    line.replaceAll("%VERSION%", project.version.toString())
+                }
+            }
+            // Launch4j exe + its dependency jars (kept alongside, not embedded)
+            from(layout.buildDirectory.dir('launch4j')) {
+                include "*.exe"
+                include "lib/**"
+            }
+            from(projectDir) {
+                include 'icons/*.png'
+                include 'icons/*.ico'
+                include 'README.md'
+                include 'LICENSE'
+            }
+            into windowsZipDir.get().asFile
+        }
+    }
+}
+
+tasks.register('portableWindows', Zip) {
+    group = 'portable'
+    description = 'Packages the Launch4j EXE (no bundled JRE, requires system Java 17+) into a portable Windows ZIP'
+    dependsOn preparePortableWindows
+
+    archiveBaseName = "${project.name}"
+    archiveClassifier = 'windows-portable'
+    archiveExtension = 'zip'
+
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+
+    from windowsZipDir
+}
+
+def macAppDir = layout.buildDirectory.dir("portableMac/CVC-Viewer.app")
+
+tasks.register('preparePortableMac') {
+    group = 'portable'
+    description = 'Assembles a minimal .app bundle wrapping the shadow jar (no bundled JRE, requires system Java 17+)'
+    dependsOn shadowJar
+
+    doLast {
+        def appDir = macAppDir.get().asFile
+        delete appDir
+        def contentsDir = new File(appDir, 'Contents')
+        def macosDir = new File(contentsDir, 'MacOS')
+        def resourcesDir = new File(contentsDir, 'Resources')
+        def appJarDir = new File(resourcesDir, 'app')
+        [contentsDir, macosDir, resourcesDir, appJarDir].each { it.mkdirs() }
+
+        copy {
+            from("${projectDir}/packaging/macos/Info.plist.template")
+            into contentsDir
+            rename { 'Info.plist' }
+            filter { line -> line.replaceAll('%VERSION%', project.version.toString()) }
+        }
+        copy {
+            from("${projectDir}/packaging/macos/launcher.sh")
+            into macosDir
+            rename { 'CVC-Viewer' }
+        }
+        new File(macosDir, 'CVC-Viewer').setExecutable(true, false)
+        copy {
+            from(macLogo)
+            into resourcesDir
+        }
+        copy {
+            from(shadowJar.archiveFile)
+            into appJarDir
+            rename { 'CVC-Viewer.jar' }
+        }
+    }
+}
+
+tasks.register('portableMac', Zip) {
+    group = 'portable'
+    description = 'Packages the .app bundle into a portable macOS ZIP (build/on macOS CI only - not runnable on Windows)'
+    dependsOn preparePortableMac
+
+    archiveBaseName = "${project.name}"
+    archiveClassifier = 'macos-portable'
+    archiveExtension = 'zip'
+
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+
+    from(layout.buildDirectory.dir('portableMac'))
+}
+
+def linuxPortableDir = layout.buildDirectory.dir("portableLinux/CVC-Viewer")
+
+tasks.register('preparePortableLinux') {
+    group = 'portable'
+    description = 'Assembles a shell launcher + desktop entry wrapping the shadow jar (no bundled JRE, requires system Java 17+)'
+    dependsOn shadowJar
+
+    doLast {
+        def dir = linuxPortableDir.get().asFile
+        delete dir
+        dir.mkdirs()
+
+        copy {
+            from(shadowJar.archiveFile)
+            into dir
+            rename { 'CVC-Viewer.jar' }
+        }
+        copy {
+            from("${projectDir}/packaging/linux/cvc-viewer.sh")
+            into dir
+        }
+        new File(dir, 'cvc-viewer.sh').setExecutable(true, false)
+        copy {
+            from("${projectDir}/packaging/linux/cvc-viewer.desktop.template")
+            into dir
+            rename { 'cvc-viewer.desktop' }
+            filter { line -> line.replaceAll('%INSTALL_DIR%', '.') }
+        }
+        copy {
+            from(linuxLogo)
+            into dir
+            rename { 'cvc-logo.png' }
+        }
+        copy {
+            from("${projectDir}/README.md", "${projectDir}/LICENSE")
+            into dir
+        }
+    }
+}
+
+tasks.register('portableLinux', Tar) {
+    group = 'portable'
+    description = 'Packages the shell launcher into a portable Linux tar.gz (no bundled JRE, requires system Java 17+)'
+    dependsOn preparePortableLinux
+
+    archiveBaseName = "${project.name}"
+    archiveClassifier = 'linux-portable'
+    compression = Compression.GZIP
+    archiveExtension = 'tar.gz'
+
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+
+    from(linuxPortableDir)
+}
 
 tasks.register("verifyWix") {
     group 'jpackage'
@@ -266,8 +373,8 @@ tasks.register("jpackageMac", Exec) {
             "--main-class", mainClassName,
             "--dest", outputDir,
             "--app-version", project.version,
-            "--mac-package-name",
-            "--mac-package-identifier",
+            "--mac-package-name", appName,
+            "--mac-package-identifier", "io.github.realmoieen.cvcviewer",
             "--icon", macLogo,
             "--vendor", vendor,
             "--description", description,

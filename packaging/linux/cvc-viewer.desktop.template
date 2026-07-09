@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=CVC-Viewer
+Comment=View and inspect Card Verifiable Certificates (CVC)
+Exec=%INSTALL_DIR%/cvc-viewer.sh %f
+Icon=%INSTALL_DIR%/cvc-logo.png
+Terminal=false
+Categories=Utility;Security;
+MimeType=application/x-cvcert;application/x-cvreq;
